@@ -3,31 +3,42 @@ using UTHConfMS.Infra.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-// 1. Add DbContext (Kết nối SQL Server)
-
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// 2. Add Controllers
 builder.Services.AddControllers();
-// 3. Add Swagger (API Docs)
+
+// CẤU HÌNH SWAGGER
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// 2. CẤU HÌNH DATABASE
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 var app = builder.Build();
-// 4. Use Swagger UI
+
+// Tự động tạo Database khi chạy (Migration)
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        context.Database.Migrate();
+        Console.WriteLine("--> Database Migration Successful!");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"--> Database Migration Failed: {ex.Message}");
+    }
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-// 5. Middleware
-app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
-// 6. Map Controllers
 app.MapControllers();
 
 app.Run();
