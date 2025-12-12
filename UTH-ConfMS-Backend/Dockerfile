@@ -1,7 +1,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Copy file csproj và restore (Copy đúng cấu trúc lớp)
 COPY ["UTHConfMS.API/UTHConfMS.API.csproj", "UTHConfMS.API/"]
 COPY ["UTHConfMS.Core/UTHConfMS.Core.csproj", "UTHConfMS.Core/"]
 COPY ["UTHConfMS.Infra/UTHConfMS.Infra.csproj", "UTHConfMS.Infra/"]

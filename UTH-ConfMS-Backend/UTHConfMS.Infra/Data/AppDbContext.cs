@@ -5,14 +5,20 @@ namespace UTHConfMS.Infra.Data
 {
     public class AppDbContext : DbContext
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options)
+        public AppDbContext(DbContextOptions<AppDbContext> options) 
             : base(options) { }
 
-        public DbSet<User> Users => Set<User>();
-        public DbSet<Paper> Papers => Set<Paper>();
-        public DbSet<Conference> Conferences => Set<Conference>();
-        public DbSet<Review> Reviews => Set<Review>();
-        public DbSet<Conflict> Conflicts => Set<Conflict>();
-        public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+        public DbSet<User> Users { get; set; }
+        public DbSet<Conference> Conferences { get; set; }
+        public DbSet<Paper> Papers { get; set; }
+        public DbSet<Review> Reviews { get; set; }
+        public DbSet<Conflict> Conflicts { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            
+        }
     }
 }

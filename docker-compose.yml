@@ -32,7 +32,12 @@ services:
       dockerfile: Dockerfile
     container_name: uth_frontend
     ports:
-      - "3000:80"
+      - "3000:3000"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./UTH-ConfMS-Frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
 
