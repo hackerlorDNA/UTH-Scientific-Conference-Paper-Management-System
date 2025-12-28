@@ -21,6 +21,7 @@ services:
     environment:
       - ConnectionStrings__DefaultConnection=Server=db;Database=UTHConfMS;User Id=postgres;Password=123456;
       - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
     ports:
       - "5000:8080" 
     depends_on:
