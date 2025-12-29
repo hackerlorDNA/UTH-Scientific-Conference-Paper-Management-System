@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { Home } from './pages/Public/Home';
@@ -16,11 +15,14 @@ import { AdminDashboard } from './pages/Admin/Dashboard';
 import { DecisionNotification } from './components/DecisionNotification';
 import { Profile } from './components/Profile';
 import { AuthProvider } from './contexts/AuthContext';
+import { ForgotPassword } from './pages/Auth/ForgotPassword';
+
 
 export type ViewState = 
   | 'home' 
   | 'login' 
   | 'register' 
+  | 'forgot-password'
   | 'conference-details' 
   | 'call-for-papers' 
   | 'program' 
@@ -40,6 +42,7 @@ const App: React.FC = () => {
       case 'home': return <Home />;
       case 'login': return <Login onNavigate={setCurrentView} />;
       case 'register': return <Register onNavigate={setCurrentView} />;
+      case 'forgot-password': return <ForgotPassword onNavigate={setCurrentView} />;
       case 'conference-details': return <ConferenceDetails />;
       case 'call-for-papers': return <CallForPapers onNavigate={setCurrentView} />;
       case 'program': return <Program />;

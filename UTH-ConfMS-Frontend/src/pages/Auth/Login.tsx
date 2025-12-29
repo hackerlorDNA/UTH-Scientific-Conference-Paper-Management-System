@@ -55,6 +55,7 @@ export const Login: React.FC<LoginProps> = ({ onNavigate }) => {
                             type="email" 
                             className="w-full h-11 pl-10 pr-4 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-text-main-light dark:text-text-main-dark text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                             placeholder="name@example.com"
+                            required
                         />
                     </div>
                 </div>
@@ -62,7 +63,13 @@ export const Login: React.FC<LoginProps> = ({ onNavigate }) => {
                 <div className="flex flex-col gap-1.5">
                     <div className="flex justify-between items-center">
                         <label className="text-sm font-semibold text-text-main-light dark:text-text-main-dark" htmlFor="password">Mật khẩu</label>
-                        <a href="#" className="text-xs font-medium text-primary hover:text-primary-hover">Quên mật khẩu?</a>
+                        <button 
+                            type="button"
+                            onClick={() => onNavigate('forgot-password')}
+                            className="text-xs font-medium text-primary hover:text-primary-hover transition-colors"
+                        >
+                            Quên mật khẩu?
+                        </button>
                     </div>
                     <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-sec-light">
@@ -73,6 +80,7 @@ export const Login: React.FC<LoginProps> = ({ onNavigate }) => {
                             type="password" 
                             className="w-full h-11 pl-10 pr-4 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-text-main-light dark:text-text-main-dark text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                             placeholder="••••••••"
+                            required
                         />
                     </div>
                 </div>
