@@ -1,7 +1,11 @@
-
 import React from 'react';
 
-export const Hero: React.FC = () => {
+interface HeroProps {
+  onSubmitPaper?: () => void;       // Hàm gọi khi nhấn nút Nộp bài
+  onViewCallForPapers?: () => void; // Hàm gọi khi nhấn nút Xem kêu gọi bài báo
+}
+
+export const Hero: React.FC<HeroProps> = ({ onSubmitPaper, onViewCallForPapers }) => {
   return (
     <div className="w-full bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-background-dark">
       <div className="flex flex-1 justify-center px-5 md:px-10 lg:px-20 py-12 lg:py-20">
@@ -20,17 +24,25 @@ export const Hero: React.FC = () => {
                 </h2>
               </div>
               <div className="flex flex-wrap gap-4 pt-2">
-                <button className="flex min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-lg h-12 px-6 bg-primary hover:bg-primary-hover text-white text-base font-bold leading-normal tracking-[0.015em] transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
+                <button
+                  onClick={onSubmitPaper}
+                  className="flex min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-lg h-12 px-6 bg-primary hover:bg-primary-hover text-white text-base font-bold leading-normal tracking-[0.015em] transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                >
                   <span className="material-symbols-outlined text-[20px]">upload_file</span>
                   <span className="truncate">Nộp bài</span>
                 </button>
-                <button className="flex min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-lg h-12 px-6 bg-white dark:bg-card-dark text-text-main-light dark:text-text-main-dark border border-border-light dark:border-border-dark hover:bg-gray-50 dark:hover:bg-gray-700 text-base font-bold leading-normal tracking-[0.015em] transition-colors">
+                <button
+                  onClick={onViewCallForPapers}
+                  className="flex min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-lg h-12 px-6 bg-white dark:bg-card-dark text-text-main-light dark:text-text-main-dark border border-border-light dark:border-border-dark hover:bg-gray-50 dark:hover:bg-gray-700 text-base font-bold leading-normal tracking-[0.015em] transition-colors"
+                >
                   <span className="material-symbols-outlined text-[20px]">campaign</span>
                   <span className="truncate">Xem kêu gọi bài báo</span>
                 </button>
               </div>
               <div className="mt-8 p-6 rounded-xl bg-white dark:bg-card-dark border border-border-light dark:border-border-dark shadow-sm">
-                <h3 className="text-sm font-bold text-text-sec-light dark:text-text-sec-dark uppercase tracking-wider mb-4">Thông tin hội nghị sắp tới</h3>
+                <h3 className="text-sm font-bold text-text-sec-light dark:text-text-sec-dark uppercase tracking-wider mb-4">
+                  Thông tin hội nghị sắp tới
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="flex flex-col gap-1">
                     <span className="text-xs text-text-sec-light dark:text-text-sec-dark">Tên hội nghị</span>
@@ -50,14 +62,18 @@ export const Hero: React.FC = () => {
             <div className="w-full flex-1 lg:h-auto">
               <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border-4 border-white dark:border-card-dark">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent z-10"></div>
-                <div 
-                  className="w-full h-full bg-center bg-no-repeat bg-cover transform hover:scale-105 transition-transform duration-700" 
-                  style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBRnu-R22HjP8mJqC_Btj7Up0bocvokeUQ59NX36qkH5cKDgB4dkhWDJU_t8qY_UV5QDnQs83eQqOZ-_aODA8W-VoF_z8W8FzgPHUho7pEP8X42AcTLVP2D-_vgFVnh5PHEDsr0l3VPEdMAkwxnj8S4ldmB9qXtUCKC3s3BLbVVt8z8SbXHojRJN4mSXSmzdbjnoHv9CI312tx1hse4WFxAzgwDqFbIvlUJpl5q1kSMcUQv_UEBMPnwk_ZA7E3m8V2tCIgmRU78sw")' }}
-                >
-                </div>
+                <div
+                  className="w-full h-full bg-center bg-no-repeat bg-cover transform hover:scale-105 transition-transform duration-700"
+                  style={{
+                    backgroundImage:
+                      'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBRnu-R22HjP8mJqC_Btj7Up0bocvokeUQ59NX36qkH5cKDgB4dkhWDJU_t8qY_UV5QDnQs83eQqOZ-_aODA8W-VoF_z8W8FzgPHUho7pEP8X42AcTLVP2D-_vgFVnh5PHEDsr0l3VPEdMAkwxnj8S4ldmB9qXtUCKC3s3BLbVVt8z8SbXHojRJN4mSXSmzdbjnoHv9CI312tx1hse4WFxAzgwDqFbIvlUJpl5q1kSMcUQv_UEBMPnwk_ZA7E3m8V2tCIgmRU78sw")',
+                  }}
+                ></div>
                 <div className="absolute bottom-6 left-6 right-6 z-20 text-white">
                   <p className="text-sm font-medium opacity-90">Hội thảo Khoa học Quốc tế lần thứ 5</p>
-                  <p className="text-xl font-bold mt-1">International Conference on System Science and Engineering</p>
+                  <p className="text-xl font-bold mt-1">
+                    International Conference on System Science and Engineering
+                  </p>
                 </div>
               </div>
             </div>
