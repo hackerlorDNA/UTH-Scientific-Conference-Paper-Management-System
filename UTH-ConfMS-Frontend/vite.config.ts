@@ -1,22 +1,17 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: true, // Cho phép Docker map port
+    host: true, // Cho phép Docker map port ra ngoài
     port: 3000,
-    watch: {
-      usePolling: true // Bắt buộc để Docker trên Windows nhận diện thay đổi file
+    strictPort: true,
+    hmr: {
+      clientPort: 3000, // Ép WebSocket chạy đúng port 3000
     },
-    proxy: {
-      // Bất cứ request nào bắt đầu bằng /api sẽ được chuyển hướng
-      '/api': {
-        target: 'http://backend:8080', // Tên service backend trong docker-compose
-        changeOrigin: true,
-        secure: false,
-      }
+    watch: {
+      usePolling: true,
     }
   }
 })

@@ -1,20 +1,29 @@
+import axios from 'axios';
 
-// Mock API service
-export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const apiClient = axios.create({
+  baseURL: '/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
-export interface ApiResponse<T> {
-  data: T;
-  success: boolean;
-  message?: string;
-}
+// Thêm token nếu có
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
-export const mockFetch = async <T>(data: T, shouldFail = false): Promise<ApiResponse<T>> => {
-  await delay(800); // Simulate network latency
-  if (shouldFail) {
-    throw new Error('Network error or server error');
+export const api = {
+  get: (url: string) => apiClient.get(url),
+  post: (url: string, data: any) => apiClient.post(url, data),
+  put: (url: string, data: any) => apiClient.put(url, data),
+  delete: (url: string) => apiClient.delete(url),
+};
+
+export const aiApi = {
+  checkGrammar: async (text: string) => {
+    // Gateway map /api/ai -> ai-service
+    return apiClient.post('/ai/check-grammar', { text });
   }
-  return {
-    data,
-    success: true,
-  };
 };

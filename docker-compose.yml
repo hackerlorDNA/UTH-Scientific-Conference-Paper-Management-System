@@ -1,32 +1,81 @@
 version: '3.8'
 
 services:
+  # ========================
+  # 1. DATABASE
+  # ========================
   db:
     image: postgres:15-alpine
     container_name: uth_db
     environment:
+      - POSTGRES_DB=UTHConfMS
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=123456
-      - POSTGRES_DB=UTHConfMS
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - uth-net
+    restart: unless-stopped # Tự bật lại nếu crash
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-  backend:
+  # ========================
+  # 2. CORE SERVICE
+  # ========================
+  core-service:
     build:
-      context: ./UTH-ConfMS-Backend
+      context: ./UTH-ConfMS-Backend/Services/UTH.Core
       dockerfile: Dockerfile
-    container_name: uth_backend
+    container_name: uth_core
     environment:
       - ConnectionStrings__DefaultConnection=Server=db;Database=UTHConfMS;User Id=postgres;Password=123456;
-      - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-    ports:
-      - "5000:8080" 
     depends_on:
-      - db
+      db:
+        condition: service_healthy 
+      redis:
+        condition: service_healthy
+    networks:
+      - uth-net
+    restart: on-failure
 
+  # ========================
+  # 3. AI SERVICE
+  # ========================
+  ai-service:
+    build:
+      context: ./UTH-ConfMS-Backend/Services/UTH.AI
+      dockerfile: Dockerfile
+    container_name: uth_ai
+    networks:
+      - uth-net
+    restart: unless-stopped
+
+  # ========================
+  # 4. API GATEWAY
+  # ========================
+  gateway:
+    build:
+      context: ./UTH-ConfMS-Backend/Gateways/UTH.ApiGateway
+      dockerfile: Dockerfile
+    container_name: uth_gateway
+    ports:
+      - "8000:8080"
+    depends_on:
+      - core-service
+      - ai-service
+    networks:
+      - uth-net
+    restart: unless-stopped
+
+  # ========================
+  # 6. FRONTEND
+  # ========================
   frontend:
     build:
       context: ./UTH-ConfMS-Frontend
@@ -36,11 +85,18 @@ services:
       - "3000:3000"
     environment:
       - CHOKIDAR_USEPOLLING=true
+      - VITE_API_URL=http://localhost:8000 
     volumes:
-      - ./UTH-ConfMS-Frontend:/app  
+      - ./UTH-ConfMS-Frontend:/app
       - /app/node_modules
     depends_on:
-      - backend
+      - gateway
+    networks:
+      - uth-net
 
 volumes:
   pgdata:
+
+networks:
+  uth-net:
+    driver: bridge
