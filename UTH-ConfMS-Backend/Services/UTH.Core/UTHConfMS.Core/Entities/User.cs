@@ -1,10 +1,40 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace UTHConfMS.Core.Entities
 {
+    [Table("users")]
     public class User
     {
+        [Key]
+        [Column("user_id")]
         public int Id { get; set; }
-        public string Email { get; set; } = null!;
-        public string PasswordHash { get; set; } = null!;
-        public string Role { get; set; } = "Author"; // Admin / Author / Reviewer
+
+        [Column("full_name")]
+        [Required]
+        public string FullName { get; set; }
+
+        [Column("email")]
+        [Required]
+        public string Email { get; set; }
+
+        [Column("password_hash")]
+        [Required]
+        public string PasswordHash { get; set; }
+
+        [Column("role")]
+        [Required]
+        public string Role { get; set; } // e.g., Author, Reviewer, Chair, Admin
+
+        [Column("affiliation")]
+        public string? Affiliation { get; set; }
+
+        [Column("expertise_keywords")]
+        public string? ExpertiseKeywords { get; set; }
+
+        // Navigation
+        public ICollection<PaperAuthor> AuthoredPapers { get; set; }
+        public ICollection<Assignment> Assignments { get; set; } // Các bài được phân công review
+        public ICollection<Decision> DecisionsMade { get; set; } // Các quyết định (nếu là Chair)
     }
 }
