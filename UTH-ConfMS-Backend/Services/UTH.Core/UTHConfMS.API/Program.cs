@@ -1,4 +1,8 @@
+﻿
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using UTHConfMS.Infra.Data;
 using UTHConfMS.Core.Interfaces;
 using UTHConfMS.Infra.Services;
@@ -7,10 +11,10 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
-// =====================
-// SERVICES
-// =====================
-builder.Services.AddControllers();
+        // =====================
+        // SERVICES
+        // =====================
+        builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -31,10 +35,32 @@ builder.Services.AddCors(options =>
 
 // DI
 builder.Services.AddScoped<IConferenceService, ConferenceService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
-// (CHUẨN BỊ CHO LOGIN / JWT – dù chưa dùng token)
-builder.Services.AddAuthentication();
-builder.Services.AddAuthorization();
+// 1. CẤU HÌNH AUTHENTICATION (Đặt trước builder.Build)
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+    var key = Encoding.ASCII.GetBytes(jwtSettings["SecretKey"]);
+
+    builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+ {
+     options.RequireHttpsMetadata = false;
+     options.SaveToken = true;
+     options.TokenValidationParameters = new TokenValidationParameters
+     {
+         ValidateIssuerSigningKey = true,
+         IssuerSigningKey = new SymmetricSecurityKey(key),
+         ValidateIssuer = true,
+         ValidateAudience = true,
+         ValidIssuer = jwtSettings["Issuer"],
+         ValidAudience = jwtSettings["Audience"],
+         ClockSkew = TimeSpan.Zero
+     };
+ });
 
 var app = builder.Build();
 
@@ -52,15 +78,30 @@ app.UseAuthorization();
 // AUTO MIGRATION
 using (var scope = app.Services.CreateScope())
 {
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    var context = services.GetRequiredService<AppDbContext>();
+
     try
     {
-        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        context.Database.Migrate();
-        Console.WriteLine("--> Database Migration Successful!");
+        logger.LogInformation("--> Đang khởi tạo Database...");
+
+        if (context.Database.CanConnect())
+        {
+            logger.LogInformation("--> Kết nối thành công!");
+
+            context.Database.EnsureCreated();
+
+            logger.LogInformation("--> Đã tạo bảng (Schema) thành công!");
+        }
+        else
+        {
+            logger.LogError("--> Không thể kết nối DB dù Docker bảo đã Healthcheck!");
+        }
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"--> Database Migration Failed: {ex.Message}");
+        logger.LogError(ex, "--> Lỗi nghiêm trọng khi khởi tạo DB");
     }
 }
 

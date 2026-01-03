@@ -12,19 +12,19 @@ namespace UTHConfMS.Core.Entities
 
         [Column("full_name")]
         [Required]
-        public string FullName { get; set; }
+        public string FullName { get; set; } = string.Empty;
 
         [Column("email")]
         [Required]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
         [Column("password_hash")]
         [Required]
-        public string PasswordHash { get; set; }
+        public string PasswordHash { get; set; } = string.Empty;
 
         [Column("role")]
         [Required]
-        public string Role { get; set; } // e.g., Author, Reviewer, Chair, Admin
+        public string Role { get; set; } = string.Empty;
 
         [Column("affiliation")]
         public string? Affiliation { get; set; }
@@ -32,9 +32,9 @@ namespace UTHConfMS.Core.Entities
         [Column("expertise_keywords")]
         public string? ExpertiseKeywords { get; set; }
 
-        // Navigation
-        public ICollection<PaperAuthor> AuthoredPapers { get; set; }
-        public ICollection<Assignment> Assignments { get; set; } // Các bài được phân công review
-        public ICollection<Decision> DecisionsMade { get; set; } // Các quyết định (nếu là Chair)
+        // Navigation properties
+        public ICollection<PaperAuthor> AuthoredPapers { get; set; } = new List<PaperAuthor>();
+        public ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
+        public ICollection<Decision> DecisionsMade { get; set; } = new List<Decision>();
     }
 }
