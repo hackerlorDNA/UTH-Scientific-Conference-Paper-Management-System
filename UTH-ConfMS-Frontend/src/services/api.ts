@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const apiClient = axios.create({
-  baseURL: '/api',
+export const apiClient = axios.create({
+  baseURL: (import.meta.env.VITE_API_URL ||'http://localhost:8080/') + '/api', 
   headers: {
     'Content-Type': 'application/json',
   },
@@ -15,10 +15,10 @@ apiClient.interceptors.request.use((config) => {
 });
 
 export const api = {
-  get: (url: string) => apiClient.get(url),
-  post: (url: string, data: any) => apiClient.post(url, data),
-  put: (url: string, data: any) => apiClient.put(url, data),
-  delete: (url: string) => apiClient.delete(url),
+  get: <T>(url: string) => apiClient.get<T>(url),
+  post: <T>(url: string, data: any) => apiClient.post<T>(url, data),
+  put: <T>(url: string, data: any) => apiClient.put<T>(url, data),
+  delete: <T>(url: string) => apiClient.delete<T>(url),
 };
 
 export const aiApi = {
@@ -26,4 +26,12 @@ export const aiApi = {
     // Gateway map /api/ai -> ai-service
     return apiClient.post('/ai/check-grammar', { text });
   }
+};
+
+export const mockFetch = <T>(data: T, delay = 1000): Promise<T> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(data);
+    }, delay);
+  });
 };
