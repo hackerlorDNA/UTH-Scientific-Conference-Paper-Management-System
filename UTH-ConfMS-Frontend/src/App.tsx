@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { Home } from './pages/Public/Home';
 import { Login } from './pages/Auth/Login';
 import { Register } from './pages/Auth/Register';
+import { ForgotPassword } from './pages/Auth/ForgotPassword';
 import { Footer } from './components/Footer';
 import { ConferenceDetails } from './components/ConferenceDetails';
 import { CallForPapers } from './components/CallForPapers';
@@ -12,25 +14,26 @@ import { SubmitPaper } from './pages/Author/SubmitPaper';
 import { ReviewerDashboard } from './pages/Reviewer/Dashboard';
 import { ChairDashboard } from './pages/Chair/Dashboard';
 import { AdminDashboard } from './pages/Admin/Dashboard';
+import { UserManagement } from './pages/Admin/UserManagement';
 import { DecisionNotification } from './components/DecisionNotification';
 import { Profile } from './components/Profile';
 import { AuthProvider } from './contexts/AuthContext';
-import { ForgotPassword } from './pages/Auth/ForgotPassword';
 
-export type ViewState =
-  | 'home'
-  | 'login'
-  | 'register'
+export type ViewState = 
+  | 'home' 
+  | 'login' 
+  | 'register' 
   | 'forgot-password'
-  | 'conference-details'
-  | 'call-for-papers'
-  | 'program'
-  | 'author-dashboard'
-  | 'submit-paper'
-  | 'reviewer-dashboard'
-  | 'chair-dashboard'
+  | 'conference-details' 
+  | 'call-for-papers' 
+  | 'program' 
+  | 'author-dashboard' 
+  | 'submit-paper' 
+  | 'reviewer-dashboard' 
+  | 'chair-dashboard' 
   | 'admin-dashboard'
-  | 'decision'
+  | 'admin-users'
+  | 'decision' 
   | 'profile';
 
 const App: React.FC = () => {
@@ -38,50 +41,22 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     switch (currentView) {
-      case 'home':
-        return <Home onNavigate={setCurrentView} />;
-
-      case 'login':
-        return <Login onNavigate={setCurrentView} />;
-
-      case 'register':
-        return <Register onNavigate={setCurrentView} />;
-
-      case 'forgot-password':
-        return <ForgotPassword onNavigate={setCurrentView} />; 
-
-      case 'conference-details':
-        return <ConferenceDetails />;
-
-      case 'call-for-papers':
-        return <CallForPapers onNavigate={setCurrentView} />;
-
-      case 'program':
-        return <Program />;
-
-      case 'author-dashboard':
-        return <AuthorDashboard onNavigate={setCurrentView} />;
-
-      case 'submit-paper':
-        return <SubmitPaper onNavigate={setCurrentView} />;
-
-      case 'reviewer-dashboard':
-        return <ReviewerDashboard />;
-
-      case 'chair-dashboard':
-        return <ChairDashboard />;
-
-      case 'admin-dashboard':
-        return <AdminDashboard />;
-
-      case 'decision':
-        return <DecisionNotification />;
-
-      case 'profile':
-        return <Profile />;
-
-      default:
-        return <Home onNavigate={setCurrentView} />;
+      case 'home': return <Home />;
+      case 'login': return <Login onNavigate={setCurrentView} />;
+      case 'register': return <Register onNavigate={setCurrentView} />;
+      case 'forgot-password': return <ForgotPassword onNavigate={setCurrentView} />;
+      case 'conference-details': return <ConferenceDetails />;
+      case 'call-for-papers': return <CallForPapers onNavigate={setCurrentView} />;
+      case 'program': return <Program />;
+      case 'author-dashboard': return <AuthorDashboard onNavigate={setCurrentView} />;
+      case 'submit-paper': return <SubmitPaper onNavigate={setCurrentView} />;
+      case 'reviewer-dashboard': return <ReviewerDashboard />;
+      case 'chair-dashboard': return <ChairDashboard />;
+      case 'admin-dashboard': return <AdminDashboard onNavigate={setCurrentView} />;
+      case 'admin-users': return <UserManagement onNavigate={setCurrentView} />;
+      case 'decision': return <DecisionNotification />;
+      case 'profile': return <Profile />;
+      default: return <Home />;
     }
   };
 
