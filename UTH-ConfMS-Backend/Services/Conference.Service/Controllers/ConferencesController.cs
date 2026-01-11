@@ -1,0 +1,78 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using Conference.Service.Entities;
+using Conference.Service.DTOs;
+using Conference.Service.Interfaces;
+
+namespace Conference.Service.Controllers
+{
+    [Route("api/conferences")]
+    [ApiController]
+    public class ConferenceController : ControllerBase
+    {
+        private readonly IConferenceService _service;
+
+        public ConferenceController(IConferenceService service)
+        {
+            _service = service;
+        }
+
+        // lấy
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Entities.Conference>>> GetConferences()
+        {
+            var list = await _service.GetAllConferencesAsync();
+            return Ok(list);
+        }
+    
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Entities.Conference>> GetConference(int id)
+        {
+            var conference = await _service.GetConferenceByIdAsync(id);
+            if (conference == null) return NotFound("Không tìm thấy hội nghị");
+            return Ok(conference);
+        }
+        
+        // thêm
+        [Authorize]
+        [HttpPost]
+        public async Task<ActionResult<Entities.Conference>> CreateConferenceAsync(CreateConferenceDTO dto)
+        {
+           var conference = new Entities.Conference
+            {
+                Name = dto.Name,
+                Description = dto.Description,
+                TopicKeywords = dto.TopicKeywords,
+                StartDate = dto.StartDate,
+                EndDate = dto.EndDate,
+                AiEnabled = dto.AiEnabled
+            };
+
+            var result = await _service.CreateConferenceAsync(conference);
+            if (!result.IsSuccess) return BadRequest(new { message = result.ErrorMessage });
+            if (result.Data == null) return BadRequest(new { message = "Tạo hội nghị thất bại" });
+            return CreatedAtAction(nameof(GetConference), new { id = result.Data.Id }, result.Data);
+        }
+
+        // sửa
+        [Authorize]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateConference(int id, Entities.Conference conference)
+        {
+            var result = await _service.UpdateConferenceAsync(id, conference);
+            if (!result.IsSuccess) return BadRequest(new { message = result.ErrorMessage });
+            return NoContent();
+        }
+
+        // xóa
+        [Authorize]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteConference(int id)
+        {
+            var result = await _service.DeleteConferenceAsync(id);
+            if (!result.IsSuccess) return BadRequest(new { message = result.ErrorMessage });
+            return NoContent(); // thành công, trả về 204 (No Content)
+        }
+    }
+}

@@ -1,100 +1,230 @@
 version: '3.8'
 
 services:
-  # ========================
-  # 1. DATABASE
-  # ========================
-  db:
+  # ====================
+  # Databases
+  # ====================
+  
+  postgres:
     image: postgres:15-alpine
-    container_name: uth_db
+    container_name: uth-confms-postgres
     environment:
-      - POSTGRES_DB=UTHConfMS
-      - POSTGRES_USER=postgres
+      - POSTGRES_DB=uth_confms
+      - POSTGRES_USER=confms_admin
       - POSTGRES_PASSWORD=123456
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+      - ./database:/docker-entrypoint-initdb.d
     networks:
-      - uth-net
-    restart: unless-stopped # Tự bật lại nếu crash
+      - uth-confms-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U confms_admin"]
+      interval: 10s
       timeout: 5s
       retries: 5
 
-  # ========================
-  # 2. CORE SERVICE
-  # ========================
-  core-service:
-    build:
-      context: ./UTH-ConfMS-Backend/Services/UTH.Core
-      dockerfile: Dockerfile
-    container_name: uth_core
-    environment:
-      - ConnectionStrings__DefaultConnection=Server=db;Database=UTHConfMS;User Id=postgres;Password=123456;
-      - ASPNETCORE_URLS=http://+:8080
-    depends_on:
-      db:
-        condition: service_healthy 
-    networks:
-      - uth-net
-    restart: on-failure
-
-  # ========================
-  # 3. AI SERVICE
-  # ========================
-  ai-service:
-    build:
-      context: ./UTH-ConfMS-Backend/Services/UTH.AI
-      dockerfile: Dockerfile
-    container_name: uth_ai
-    networks:
-      - uth-net
-    restart: unless-stopped
-
-  # ========================
-  # 4. API GATEWAY
-  # ========================
-  gateway:
-    build:
-      context: ./UTH-ConfMS-Backend/Gateways/UTH.ApiGateway
-      dockerfile: Dockerfile
-    container_name: uth_gateway
+  redis:
+    image: redis:7-alpine
+    container_name: uth-confms-redis
     ports:
-      - "8000:8080"
-    depends_on:
-      - core-service
-      - ai-service
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
     networks:
-      - uth-net
+      - uth-confms-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ====================
+  # Microservices
+  # ====================
+
+  identity-service:
+    build:
+      context: .
+      dockerfile: UTH-ConfMS-Backend/Services/Identity.Service/Dockerfile
+    container_name: uth-confms-identity
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5001
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=uth_confms;Username=confms_admin;Password=123456
+      - ConnectionStrings__Redis=redis:6379
+      - JWT__Secret=UTH_CONFMS_JWT_SECRET_KEY_2026_CHANGE_IN_PRODUCTION
+      - JWT__Issuer=uth-confms-identity
+      - JWT__Audience=uth-confms-services
+      - JWT__ExpirationMinutes=60
+    ports:
+      - "5001:5001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - uth-confms-network
     restart: unless-stopped
 
-  # ========================
-  # 6. FRONTEND
-  # ========================
+  conference-service:
+    build:
+      context: .
+      dockerfile: UTH-ConfMS-Backend/Services/Conference.Service/Dockerfile
+    container_name: uth-confms-conference
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5002
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=uth_confms;Username=confms_admin;Password=123456
+      - ConnectionStrings__Redis=redis:6379
+      - Services__IdentityServiceUrl=http://identity-service:5001
+    ports:
+      - "5002:5002"
+    depends_on:
+      - postgres
+      - redis
+      - identity-service
+    networks:
+      - uth-confms-network
+    restart: unless-stopped
+
+  submission-service:
+    build:
+      context: .
+      dockerfile: UTH-ConfMS-Backend/Services/Submission.Service/Dockerfile
+    container_name: uth-confms-submission
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5003
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=uth_confms;Username=confms_admin;Password=123456
+      - ConnectionStrings__Redis=redis:6379
+      - Storage__Provider=Local
+      - Storage__BasePath=/app/uploads
+      - Services__IdentityServiceUrl=http://identity-service:5001
+      - Services__ConferenceServiceUrl=http://conference-service:5002
+    ports:
+      - "5003:5003"
+    volumes:
+      - submission_files:/app/uploads
+    depends_on:
+      - postgres
+      - redis
+      - identity-service
+      - conference-service
+    networks:
+      - uth-confms-network
+    restart: unless-stopped
+
+  review-service:
+    build:
+      context: .
+      dockerfile: UTH-ConfMS-Backend/Services/Review.Service/Dockerfile
+    container_name: uth-confms-review
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5004
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=uth_confms;Username=confms_admin;Password=123456
+      - ConnectionStrings__Redis=redis:6379
+      - Services__IdentityServiceUrl=http://identity-service:5001
+      - Services__SubmissionServiceUrl=http://submission-service:5003
+      - Services__NotificationServiceUrl=http://notification-service:5005
+    ports:
+      - "5004:5004"
+    depends_on:
+      - postgres
+      - redis
+      - identity-service
+      - submission-service
+    networks:
+      - uth-confms-network
+    restart: unless-stopped
+
+  # notification-service:
+  #   build:
+  #     context: .
+  #     dockerfile: UTH-ConfMS-Backend/Services/Notification.Service/Dockerfile
+  #   container_name: uth-confms-notification
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #     - ASPNETCORE_URLS=http://+:5005
+  #     - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=uth_confms;Username=confms_admin;Password=123456
+  #     - ConnectionStrings__Redis=redis:6379
+  #     - Email__Provider=SMTP
+  #     - Email__SmtpHost=smtp.gmail.com
+  #     - Email__SmtpPort=587
+  #     - Email__FromEmail=noreply@uth-confms.edu.vn
+  #     - Email__FromName=UTH Conference System
+  #   ports:
+  #     - "5005:5005"
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #   networks:
+  #     - uth-confms-network
+  #   restart: unless-stopped
+
+  # ====================
+  # API Gateway
+  # ====================
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: UTH-ConfMS-Backend/ApiGateway/Dockerfile
+    container_name: uth-confms-gateway
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - Services__IdentityServiceUrl=http://identity-service:5001
+      - Services__ConferenceServiceUrl=http://conference-service:5002
+      - Services__SubmissionServiceUrl=http://submission-service:5003
+      - Services__ReviewServiceUrl=http://review-service:5004
+      - Services__NotificationServiceUrl=http://notification-service:5005
+      - JWT__Secret=UTH_CONFMS_JWT_SECRET_KEY_2026_CHANGE_IN_PRODUCTION
+    ports:
+      - "5000:5000"
+    depends_on:
+      - identity-service
+      - conference-service
+      - submission-service
+      - review-service
+      # - notification-service
+    networks:
+      - uth-confms-network
+    restart: unless-stopped
+
+  # ====================
+  # Frontend
+  # ====================
+
   frontend:
     build:
       context: ./UTH-ConfMS-Frontend
       dockerfile: Dockerfile
-    container_name: uth_frontend
+    container_name: uth-confms-frontend
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:5000
+      - REACT_APP_API_GATEWAY_URL=http://api-gateway:5000
     ports:
       - "3000:3000"
-    environment:
-      - CHOKIDAR_USEPOLLING=true
-      - VITE_API_URL=http://localhost:8000 
+    depends_on:
+      - api-gateway
+    networks:
+      - uth-confms-network
+    restart: unless-stopped
     volumes:
       - ./UTH-ConfMS-Frontend:/app
       - /app/node_modules
-    depends_on:
-      - gateway
-    networks:
-      - uth-net
-
-volumes:
-  pgdata:
 
 networks:
-  uth-net:
+  uth-confms-network:
     driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  submission_files:

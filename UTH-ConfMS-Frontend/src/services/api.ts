@@ -1,9 +1,8 @@
 import axios from 'axios';
 
-// 1. Cấu hình baseURL trỏ về port của Backend (5044)
+// 1. Cấu hình baseURL trỏ về API Gateway (port 5000)
 export const apiClient = axios.create({
-  // Lưu ý: Backend đang chạy port 5044 (http) hoặc 7002 (https)
-  baseURL: (import.meta.env.VITE_API_URL || 'http://localhost:8000') + '/api', 
+  baseURL: (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api', 
   headers: {
     'Content-Type': 'application/json',
   },
