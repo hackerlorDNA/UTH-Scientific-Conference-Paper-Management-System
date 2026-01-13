@@ -1,4 +1,4 @@
-import { api } from './api';
+import apiClient from './apiClient';
 
 // Interface cho việc tạo Track/Conference
 export interface CreateConferenceDto {
@@ -16,37 +16,44 @@ export interface AssignReviewerDto {
 export const adminApi = {
   // --- Quản lý Hội nghị & Track ---
   createConference: async (data: CreateConferenceDto) => {
-    return api.post('/conferences', data);
+    const response = await apiClient.post('/conferences', data);
+    return response.data;
   },
 
   createTrack: async (conferenceId: number, name: string) => {
-    return api.post(`/tracks`, { conferenceId, name });
+    const response = await apiClient.post(`/tracks`, { conferenceId, name });
+    return response.data;
   },
 
   // --- Quản lý Bài báo (Góc nhìn Admin) ---
   getAllPapers: async (conferenceId?: number) => {
     const url = conferenceId ? `/papers?conferenceId=${conferenceId}` : '/papers/all';
-    return api.get<any[]>(url);
+    const response = await apiClient.get<any[]>(url);
+    return response.data;
   },
 
   // --- Phân công Reviewer ---
   // 1. Lấy danh sách Reviewer khả dụng cho một bài báo (tránh conflict)
   getAvailableReviewers: async (paperId: number) => {
-    return api.get<any[]>(`/assignments/available-reviewers/${paperId}`);
+    const response = await apiClient.get<any[]>(`/assignments/available-reviewers/${paperId}`);
+    return response.data;
   },
 
   // 2. Gán bài báo cho Reviewer (Manual Assignment)
   assignReviewer: async (data: AssignReviewerDto) => {
-    return api.post('/assignments', data);
+    const response = await apiClient.post('/assignments', data);
+    return response.data;
   },
   
   // 3. Chạy thuật toán tự động phân công (Gọi xuống thuật toán matching)
   autoAssign: async (conferenceId: number) => {
-    return api.post(`/assignments/auto-assign/${conferenceId}`, {});
+    const response = await apiClient.post(`/assignments/auto-assign/${conferenceId}`, {});
+    return response.data;
   },
 
   // --- Quyết định cuối cùng (Accept/Reject) ---
   makeDecision: async (paperId: number, status: 'Accepted' | 'Rejected') => {
-    return api.post(`/papers/${paperId}/decision`, { status });
+    const response = await apiClient.post(`/papers/${paperId}/decision`, { status });
+    return response.data;
   }
 };

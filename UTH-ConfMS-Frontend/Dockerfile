@@ -1,20 +1,21 @@
-# Sử dụng Node image nhẹ
-FROM node:18-alpine
+FROM node:18-alpine AS build
 
-# Thiết lập thư mục làm việc
 WORKDIR /app
 
-# Copy file định nghĩa thư viện
+# Install dependencies
 COPY package*.json ./
+RUN npm install --legacy-peer-deps && npm install ajv@8 ajv-keywords@5 --save-dev --legacy-peer-deps
 
-# Cài đặt thư viện
-RUN npm install
-
-# Copy toàn bộ code vào
+# Copy source and build
 COPY . .
+ENV CI=false
+RUN npm run build
 
-# Mở cổng 3000 (Cổng mặc định chúng ta sẽ cấu hình cho Vite)
+FROM nginx:alpine
+
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 EXPOSE 3000
 
-# Lệnh chạy server dev (thêm --host để Docker map được ra ngoài)
-CMD ["npm", "run", "dev", "--", "--host"]
+CMD ["nginx", "-g", "daemon off;"]

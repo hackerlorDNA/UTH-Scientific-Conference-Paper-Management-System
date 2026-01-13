@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { Home } from './pages/Public/Home';
@@ -13,7 +12,7 @@ import { AuthorDashboard } from './pages/Author/Dashboard';
 import { SubmitPaper } from './pages/Author/SubmitPaper';
 import { ReviewerDashboard } from './pages/Reviewer/Dashboard';
 import { ChairDashboard } from './pages/Chair/Dashboard';
-import { AdminDashboard } from './pages/Admin/Dashboard';
+import { AdminDashboard } from './pages/Admin/Dashboard';  
 import { UserManagement } from './pages/Admin/UserManagement';
 import { DecisionNotification } from './components/DecisionNotification';
 import { Profile } from './components/Profile';
@@ -33,6 +32,8 @@ export type ViewState =
   | 'chair-dashboard' 
   | 'admin-dashboard'
   | 'admin-users'
+  | 'admin-conferences'
+  | 'admin-system-config'
   | 'decision' 
   | 'profile';
 
@@ -67,7 +68,7 @@ const App: React.FC = () => {
         <main className="flex flex-col grow">
           {renderContent()}
         </main>
-        <Footer onNavigate={setCurrentView} />
+<Footer onNavigate={setCurrentView} />
       </div>
     </AuthProvider>
   );

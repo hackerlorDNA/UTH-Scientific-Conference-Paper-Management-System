@@ -1,37 +1,77 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Conference.Service.DTOs;
-using Conference.Service.Interfaces;
+using Conference.Service.DTOs.Common;
+using Conference.Service.DTOs.Requests;
+using Conference.Service.DTOs.Responses;
+using Conference.Service.Interfaces.Services;
 
-namespace Conference.Service.Controllers
+namespace Conference.Service.Controllers;
+
+[ApiController]
+[Route("api/conferences/{conferenceId:guid}/[controller]")]
+[Authorize]
+public class TracksController : ControllerBase
 {
-    [Route("api/tracks")]
-    [ApiController]
-    public class TrackController : ControllerBase
+    private readonly IConferenceService _conferenceService;
+    private readonly ILogger<TracksController> _logger;
+
+    public TracksController(IConferenceService conferenceService, ILogger<TracksController> logger)
     {
-        private readonly ITrackService _trackService;
+        _conferenceService = conferenceService;
+        _logger = logger;
+    }
 
-        public TrackController(ITrackService trackService)
+    /// <summary>
+    /// Get all tracks for a conference
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetTracks(Guid conferenceId)
+    {
+        try
         {
-            _trackService = trackService;
+            var tracks = await _conferenceService.GetTracksAsync(conferenceId);
+            return Ok(new ApiResponse<List<TrackDto>>
+            {
+                Success = true,
+                Data = tracks
+            });
         }
-
-        // Lấy danh sách Track của 1 hội nghị
-        [HttpGet("conference/{confId}")]
-        public async Task<IActionResult> GetTracks(int confId)
+        catch (Exception ex)
         {
-            var tracks = await _trackService.GetTracksByConferenceIdAsync(confId);
-            return Ok(tracks);
+            _logger.LogError(ex, "Get tracks failed for conference {ConferenceId}", conferenceId);
+            return NotFound(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Conference not found"
+            });
         }
+    }
 
-        // Tạo Track mới
-        [Authorize]
-        [HttpPost]
-        public async Task<IActionResult> CreateTrack(CreateTrackDTO dto)
+    /// <summary>
+    /// Add a new track to conference
+    /// </summary>
+    [HttpPost]
+    [Authorize(Policy = "RequireConferenceManage")]
+    public async Task<IActionResult> AddTrack(Guid conferenceId, [FromBody] CreateTrackRequest request)
+    {
+        try
         {
-            var result = await _trackService.CreateTrackAsync(dto);
-            if (!result.IsSuccess) return BadRequest(new { message = result.ErrorMessage });
-            return Ok(new { message = "Tạo Track thành công!", track = result.Track });
+            var track = await _conferenceService.AddTrackAsync(conferenceId, request);
+            return Ok(new ApiResponse<TrackDto>
+            {
+                Success = true,
+                Message = "Track added successfully",
+                Data = track
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Add track failed for conference {ConferenceId}", conferenceId);
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = ex.Message
+            });
         }
     }
 }
