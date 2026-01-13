@@ -11,7 +11,8 @@ import { Program } from './components/Program';
 import { AuthorDashboard } from './pages/Author/Dashboard';
 import { SubmitPaper } from './pages/Author/SubmitPaper';
 import { ReviewerDashboard } from './pages/Reviewer/Dashboard';
-import { ChairDashboard } from './pages/Chair/Dashboard';;
+import { ChairDashboard } from './pages/Chair/Dashboard';
+import { AdminDashboard } from './pages/Admin/Dashboard';  
 import { UserManagement } from './pages/Admin/UserManagement';
 import { DecisionNotification } from './components/DecisionNotification';
 import { Profile } from './components/Profile';
@@ -52,6 +53,7 @@ const App: React.FC = () => {
       case 'submit-paper': return <SubmitPaper onNavigate={setCurrentView} />;
       case 'reviewer-dashboard': return <ReviewerDashboard />;
       case 'chair-dashboard': return <ChairDashboard />;
+      case 'admin-dashboard': return <AdminDashboard onNavigate={setCurrentView} />;
       case 'admin-users': return <UserManagement onNavigate={setCurrentView} />;
       case 'decision': return <DecisionNotification />;
       case 'profile': return <Profile />;

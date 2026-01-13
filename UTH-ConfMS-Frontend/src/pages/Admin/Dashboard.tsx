@@ -31,7 +31,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
             <h3 className="font-bold text-lg">Cấu hình hệ thống</h3>
             <p className="text-sm text-text-sec-light mt-1">Cài đặt hạn nộp bài, email tự động, giao diện hội nghị.</p>
             <button 
-              onClick={() => onNavigate('admin-config')} // Bổ sung điều hướng
+              
               className="mt-auto pt-4 text-sm font-bold text-primary hover:underline text-left flex items-center gap-1"
             >
               Truy cập <span className="material-symbols-outlined text-sm">arrow_forward</span>
@@ -44,7 +44,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
             <h3 className="font-bold text-lg">Sao lưu & Dữ liệu</h3>
             <p className="text-sm text-text-sec-light mt-1">Quản lý cơ sở dữ liệu, lịch sử hoạt động và logs hệ thống.</p>
             <button 
-              onClick={() => onNavigate('admin-backup')} // Bổ sung điều hướng
+              
               className="mt-auto pt-4 text-sm font-bold text-primary hover:underline text-left flex items-center gap-1"
             >
               Truy cập <span className="material-symbols-outlined text-sm">arrow_forward</span>
