@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { Home } from './pages/Public/Home';
@@ -12,7 +13,8 @@ import { AuthorDashboard } from './pages/Author/Dashboard';
 import { SubmitPaper } from './pages/Author/SubmitPaper';
 import { ReviewerDashboard } from './pages/Reviewer/Dashboard';
 import { ChairDashboard } from './pages/Chair/Dashboard';
-import { AdminDashboard } from './pages/Admin/Dashboard';  
+import { CreateConference } from './pages/Chair/CreateConference';
+import { AdminDashboard } from './pages/Admin/Dashboard';
 import { UserManagement } from './pages/Admin/UserManagement';
 import { DecisionNotification } from './components/DecisionNotification';
 import { Profile } from './components/Profile';
@@ -27,13 +29,12 @@ export type ViewState =
   | 'call-for-papers' 
   | 'program' 
   | 'author-dashboard' 
+  | 'create-conference'
   | 'submit-paper' 
   | 'reviewer-dashboard' 
   | 'chair-dashboard' 
   | 'admin-dashboard'
   | 'admin-users'
-  | 'admin-conferences'
-  | 'admin-system-config'
   | 'decision' 
   | 'profile';
 
@@ -52,7 +53,8 @@ const App: React.FC = () => {
       case 'author-dashboard': return <AuthorDashboard onNavigate={setCurrentView} />;
       case 'submit-paper': return <SubmitPaper onNavigate={setCurrentView} />;
       case 'reviewer-dashboard': return <ReviewerDashboard />;
-      case 'chair-dashboard': return <ChairDashboard />;
+      case 'chair-dashboard': return <ChairDashboard onNavigate={setCurrentView} />;
+      case 'create-conference': return <CreateConference onNavigate={setCurrentView} />;
       case 'admin-dashboard': return <AdminDashboard onNavigate={setCurrentView} />;
       case 'admin-users': return <UserManagement onNavigate={setCurrentView} />;
       case 'decision': return <DecisionNotification />;
@@ -68,7 +70,7 @@ const App: React.FC = () => {
         <main className="flex flex-col grow">
           {renderContent()}
         </main>
-<Footer onNavigate={setCurrentView} />
+        <Footer onNavigate={setCurrentView} />
       </div>
     </AuthProvider>
   );
