@@ -1,10 +1,10 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
-// API Gateway URL (tất cả requests đi qua gateway)
-const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000');
+// SỬA: Gán cứng địa chỉ gốc, KHÔNG check .env nữa để tránh lỗi lặp /api
+const API_BASE_URL = 'http://localhost:5000';
 
-// Mock mode - set to true when backend is not running
-const MOCK_MODE = (import.meta.env.VITE_MOCK_MODE === 'true' || false); // Changed to false to use real API
+// Mock mode
+const MOCK_MODE = false; 
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
@@ -43,7 +43,6 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Generic API Response type
 export interface ApiResponse<T> {
   success: boolean;
   message?: string;

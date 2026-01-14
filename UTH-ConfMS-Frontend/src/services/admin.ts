@@ -14,20 +14,28 @@ export interface AssignReviewerDto {
 }
 
 export const adminApi = {
+  // --- Quản lý người dùng ---
+  getUsers: async (query: string = '', page: number = 1, pageSize: number = 10) => {
+    const response: any = await apiClient.get('/api/users/allusers', {
+      params: { query, page, pageSize }
+    });
+    // Xử lý trường hợp apiClient đã trả về data qua interceptor hoặc chưa
+    return response.data || response;
+  },
   // --- Quản lý Hội nghị & Track ---
   createConference: async (data: CreateConferenceDto) => {
-    const response = await apiClient.post('/conferences', data);
+    const response = await apiClient.post('/api/conferences', data);
     return response.data;
   },
 
   createTrack: async (conferenceId: number, name: string) => {
-    const response = await apiClient.post(`/tracks`, { conferenceId, name });
+    const response = await apiClient.post(`/api/tracks`, { conferenceId, name });
     return response.data;
   },
 
   // --- Quản lý Bài báo (Góc nhìn Admin) ---
   getAllPapers: async (conferenceId?: number) => {
-    const url = conferenceId ? `/papers?conferenceId=${conferenceId}` : '/papers/all';
+    const url = conferenceId ? `/api/papers?conferenceId=${conferenceId}` : '/api/papers/all';
     const response = await apiClient.get<any[]>(url);
     return response.data;
   },
@@ -35,19 +43,19 @@ export const adminApi = {
   // --- Phân công Reviewer ---
   // 1. Lấy danh sách Reviewer khả dụng cho một bài báo (tránh conflict)
   getAvailableReviewers: async (paperId: number) => {
-    const response = await apiClient.get<any[]>(`/assignments/available-reviewers/${paperId}`);
+    const response = await apiClient.get<any[]>(`/api/assignments/available-reviewers/${paperId}`);
     return response.data;
   },
 
   // 2. Gán bài báo cho Reviewer (Manual Assignment)
   assignReviewer: async (data: AssignReviewerDto) => {
-    const response = await apiClient.post('/assignments', data);
+    const response = await apiClient.post('/api/assignments', data);
     return response.data;
   },
   
   // 3. Chạy thuật toán tự động phân công (Gọi xuống thuật toán matching)
   autoAssign: async (conferenceId: number) => {
-    const response = await apiClient.post(`/assignments/auto-assign/${conferenceId}`, {});
+    const response = await apiClient.post(`/api/assignments/auto-assign/${conferenceId}`, {});
     return response.data;
   },
 

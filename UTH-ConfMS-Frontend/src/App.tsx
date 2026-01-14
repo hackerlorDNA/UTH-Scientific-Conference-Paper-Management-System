@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { Home } from './pages/Public/Home';
@@ -18,8 +17,7 @@ import { AdminDashboard } from './pages/Admin/Dashboard';
 import { UserManagement } from './pages/Admin/UserManagement';
 import { DecisionNotification } from './components/DecisionNotification';
 import { Profile } from './components/Profile';
-import { AuthProvider } from './contexts/AuthContext';
-import { ReviewForm } from './components/ReviewForm';
+import { useAuth, UserRole } from './contexts/AuthContext';
 export type ViewState = 
   | 'home' 
   | 'login' 
@@ -40,6 +38,17 @@ export type ViewState =
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>('home');
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  // Hàm bảo vệ View: Chỉ render nếu đúng Role
+  const renderProtected = (allowedRoles: UserRole[], component: React.ReactNode) => {
+    if (isLoading) return <div className="flex h-screen items-center justify-center">Đang tải...</div>;
+    if (!isAuthenticated) return <Login onNavigate={setCurrentView} />;
+    if (user && !allowedRoles.includes(user.role)) {
+      return <div className="p-10 text-center text-red-600 font-bold">Bạn không có quyền truy cập trang này!</div>;
+    }
+    return component;
+  };
 
   const renderContent = () => {
     switch (currentView) {
@@ -55,8 +64,8 @@ const App: React.FC = () => {
       case 'reviewer-dashboard': return <ReviewerDashboard />;
       case 'chair-dashboard': return <ChairDashboard onNavigate={setCurrentView} />;
       case 'create-conference': return <CreateConference onNavigate={setCurrentView} />;
-      case 'admin-dashboard': return <AdminDashboard onNavigate={setCurrentView} />;
-      case 'admin-users': return <UserManagement onNavigate={setCurrentView} />;
+      case 'admin-dashboard': return renderProtected(['admin'], <AdminDashboard onNavigate={setCurrentView} />);
+      case 'admin-users': return renderProtected(['admin'], <UserManagement onNavigate={setCurrentView} />);
       case 'decision': return <DecisionNotification />;
       case 'profile': return <Profile />;
       default: return <Home />;
@@ -64,7 +73,6 @@ const App: React.FC = () => {
   };
 
   return (
-    <AuthProvider>
       <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark transition-colors duration-200">
         <Navbar onNavigate={setCurrentView} currentView={currentView} />
         <main className="flex flex-col grow">
@@ -72,7 +80,6 @@ const App: React.FC = () => {
         </main>
         <Footer onNavigate={setCurrentView} />
       </div>
-    </AuthProvider>
   );
 };
 

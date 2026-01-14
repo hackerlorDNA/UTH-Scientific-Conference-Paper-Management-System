@@ -108,6 +108,32 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
+    /// Get all users
+    /// </summary>
+    [HttpGet("allusers")]
+    public async Task<IActionResult> GetAllUsers([FromQuery] string? query, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        try
+        {
+            var result = await _userService.SearchUsersAsync(query ?? string.Empty, page, pageSize);
+            return Ok(new ApiResponse<PagedResponse<UserDto>>
+            {
+                Success = true,
+                Data = result
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Get users failed");
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Internal server error"
+            });
+        }
+    }
+
+    /// <summary>
     /// Search users
     /// </summary>
     [HttpGet("search")]
