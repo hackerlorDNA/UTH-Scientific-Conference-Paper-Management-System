@@ -55,5 +55,6 @@ public class ReviewAssignment
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation properties
-    public virtual Review? Review { get; set; }
+    public PaperReview PaperReview { get; set; }
+
 }

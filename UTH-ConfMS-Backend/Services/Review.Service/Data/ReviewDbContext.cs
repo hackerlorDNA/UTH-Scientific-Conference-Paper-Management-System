@@ -9,15 +9,21 @@ public class ReviewDbContext : DbContext
         : base(options) { }
 
     public DbSet<Assignment> Assignments { get; set; }
-    public DbSet<Review> Reviews { get; set; }
+    public DbSet<PaperReview> Reviews { get; set; }
     public DbSet<Decision> Decisions { get; set; }
     public DbSet<Conflict> Conflicts { get; set; }
+    public DbSet<Reviewer> Reviewers { get; set; }
+    public DbSet<ReviewerInvitation> ReviewerInvitations { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Assignment>()
-            .HasOne(a => a.Review)
+            .HasOne(a => a.PaperReview)
             .WithOne(r => r.Assignment)
-            .HasForeignKey<Review>(r => r.AssignmentId);
+            .HasForeignKey<PaperReview>(r => r.AssignmentId);
+
+        modelBuilder.Entity<Reviewer>()
+            .HasIndex(r => new { r.UserId, r.ConferenceId })
+            .IsUnique();
     }
 }

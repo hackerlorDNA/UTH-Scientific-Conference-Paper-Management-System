@@ -17,6 +17,6 @@ namespace Review.Service.Entities
         public string Status { get; set; } = "Pending"; // Pending, Accepted, Rejected, Completed
 
         // Navigation property (Dùng tên đầy đủ để tránh xung đột namespace)
-        public virtual Review? Review { get; set; }
+        public PaperReview PaperReview { get; set; }
     }
 }
