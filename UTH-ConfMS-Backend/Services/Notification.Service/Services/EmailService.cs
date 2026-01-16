@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Mail;
 using Microsoft.Extensions.Options;
 using Notification.Service.DTOs;
+using Notification.Service.Interfaces;
 using Notification.Service.Configuration;
 
 namespace Notification.Service.Services;

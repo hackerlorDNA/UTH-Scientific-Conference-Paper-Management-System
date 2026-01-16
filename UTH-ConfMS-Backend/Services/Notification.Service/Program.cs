@@ -7,6 +7,7 @@ using Serilog;
 using Notification.Service.Data;
 using Notification.Service.Entities;
 using Notification.Service.Services;
+using Notification.Service.Interfaces;
 using Notification.Service.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -102,8 +103,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 // Register Application Services
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IEmailService, Notification.Service.Services.EmailService>();
+builder.Services.AddScoped<INotificationService, Notification.Service.Services.NotificationService>();
 
 // AutoMapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
