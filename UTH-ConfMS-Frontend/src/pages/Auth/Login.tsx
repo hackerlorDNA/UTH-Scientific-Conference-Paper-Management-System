@@ -3,6 +3,7 @@ import { ViewState } from '../../App';
 import { useAuth } from '../../contexts/AuthContext';
 import { authApi } from '../../services/authApi';
 import { jwtDecode } from 'jwt-decode';
+import logo from '../../assets/logo.png';
 
 interface LoginProps {
   onNavigate: (view: ViewState) => void;
@@ -85,11 +86,14 @@ export const Login: React.FC<LoginProps> = ({ onNavigate }) => {
       <div className="w-full max-w-md bg-white dark:bg-card-dark rounded-2xl shadow-xl border border-border-light dark:border-border-dark overflow-hidden">
         
         <div className="px-8 pt-8 pb-6 text-center">
-            <div className="size-12 text-primary mx-auto mb-4">
-                <svg className="w-full h-full" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                <path d="M24 4C12.95 4 4 12.95 4 24C4 35.05 12.95 44 24 44C35.05 44 44 35.05 44 24C44 12.95 35.05 4 24 4ZM14 32C14 30.9 14.9 30 16 30H32C33.1 30 34 30.9 34 32V34H14V32ZM24 26C21.79 26 20 24.21 20 22C20 19.79 21.79 18 24 18C26.21 18 28 19.79 28 22C28 24.21 26.21 26 24 26ZM34 16H14V14H34V16Z" fill="currentColor"></path>
-                </svg>
-            </div>
+            {/* Chỉnh size-12 (48px) hoặc lớn hơn nếu muốn logo to hơn */}
+    <div className="size-30 mx-auto mb-4"> 
+        <img 
+            src={logo} 
+            alt="Logo" 
+            className="w-full h-full object-contain" 
+        />
+    </div>
             <h2 className="text-2xl font-bold text-text-main-light dark:text-text-main-dark mb-1">Chào mừng trở lại</h2>
             <p className="text-text-sec-light dark:text-text-sec-dark text-sm">Đăng nhập vào hệ thống quản lý hội nghị</p>
         </div>

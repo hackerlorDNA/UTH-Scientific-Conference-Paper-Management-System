@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { ViewState } from '../App';
 import { useAuth } from '../contexts/AuthContext';
+import logo from '../assets/logo.png';
 
 interface NavbarProps {
   onNavigate: (view: ViewState) => void;
@@ -28,11 +29,20 @@ export const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentView }) => {
                 className="flex items-center gap-4 cursor-pointer"
                 onClick={() => onNavigate('home')}
               >
-                <div className="size-10 text-primary">
-                  <svg className="w-full h-full" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M24 4C12.95 4 4 12.95 4 24C4 35.05 12.95 44 24 44C35.05 44 44 35.05 44 24C44 12.95 35.05 4 24 4ZM14 32C14 30.9 14.9 30 16 30H32C33.1 30 34 30.9 34 32V34H14V32ZM24 26C21.79 26 20 24.21 20 22C20 19.79 21.79 18 24 18C26.21 18 28 19.79 28 22C28 24.21 26.21 26 24 26ZM34 16H14V14H34V16Z" fill="currentColor"></path>
-                  </svg>
-                </div>
+                <div 
+  className="flex items-center gap-4 cursor-pointer"
+  onClick={() => onNavigate('home')}
+>
+  {/* Chỉnh size-10 (40px) hoặc tùy ý */}
+  <div className="size-23"> 
+    <img 
+      src={logo} 
+      alt="UTH Logo" 
+      className="w-full h-full object-contain" 
+    />
+  </div>
+  <h2 className="text-xl font-bold leading-tight tracking-[-0.015em] text-primary"></h2>
+</div>
                 <h2 className="text-xl font-bold leading-tight tracking-[-0.015em] text-primary">UTH-ConfMS</h2>
               </div>
               <div className="flex items-center gap-4 lg:gap-8">

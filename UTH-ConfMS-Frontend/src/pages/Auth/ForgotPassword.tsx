@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ViewState } from '../../App';
 import { authApi } from '../../services/authApi';
+import logo from '../../assets/logo.png';
 
 interface ForgotPasswordProps {
   onNavigate: (view: ViewState) => void;
@@ -43,9 +44,15 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onNavigate }) =>
         
         {/* Header */}
         <div className="px-8 pt-8 pb-6 text-center">
-            <div className="size-12 text-primary mx-auto mb-4">
-                <span className="material-symbols-outlined text-[48px]">lock_reset</span>
-            </div>
+            {/* Chỉnh size-12 (48px) hoặc lớn hơn nếu muốn logo to hơn */}
+    <div className="size-30 mx-auto mb-4"> 
+        <img 
+            src={logo} 
+            alt="Logo" 
+            className="w-full h-full object-contain" 
+        />
+    </div>
+    <h2 className="text-2xl font-bold ...">Chào mừng trở lại</h2>
             <h2 className="text-2xl font-bold text-text-main-light dark:text-text-main-dark mb-1">Khôi phục mật khẩu</h2>
             <p className="text-text-sec-light dark:text-text-sec-dark text-sm">Nhập email của bạn để nhận mật khẩu mới</p>
         </div>
