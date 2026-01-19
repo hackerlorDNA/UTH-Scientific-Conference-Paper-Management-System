@@ -15,6 +15,8 @@ import { ChairDashboard } from './pages/Chair/Dashboard';
 import { CreateConference } from './pages/Chair/CreateConference';
 import { AdminDashboard } from './pages/Admin/Dashboard';
 import { UserManagement } from './pages/Admin/UserManagement';
+import { SystemConfig } from './pages/Admin/SystemConfig';
+import { DataBackup } from './pages/Admin/DataBackup';
 import { DecisionNotification } from './components/DecisionNotification';
 import { Profile } from './components/Profile';
 import { PCMemberManagement } from './pages/Chair/PCMemberManagement';
@@ -35,6 +37,8 @@ export type ViewState =
   | 'chair-dashboard' 
   | 'admin-dashboard'
   | 'admin-users'
+  | 'admin-config'
+  | 'admin-backup'
   | 'decision' 
   | 'profile'
   | 'pc-members'
@@ -78,6 +82,8 @@ const App: React.FC = () => {
       case 'create-conference': return <CreateConference onNavigate={setCurrentView} />;
       case 'admin-dashboard': return renderProtected(['admin'], <AdminDashboard onNavigate={setCurrentView} />);
       case 'admin-users': return renderProtected(['admin'], <UserManagement onNavigate={setCurrentView} />);
+      case 'admin-config': return renderProtected(['admin'], <SystemConfig onNavigate={setCurrentView} />);
+      case 'admin-backup': return renderProtected(['admin'], <DataBackup onNavigate={setCurrentView} />);
       case 'decision': return <DecisionNotification />;
       case 'profile': return <Profile />;
       case 'pc-members': return renderProtected(['chair', 'admin'], <PCMemberManagement />);
