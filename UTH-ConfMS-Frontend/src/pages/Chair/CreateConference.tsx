@@ -48,7 +48,7 @@ export const CreateConference: React.FC<CreateConferenceProps> = ({ onNavigate }
 
             const response = await conferenceApi.create(formData);
 
-            if (response.success) {
+            if (response.success && response.data) {
                 alert(`Tạo hội nghị "${response.data.name}" thành công!`);
                 onNavigate('chair-dashboard'); // Quay lại dashboard sau khi tạo xong
             } else {

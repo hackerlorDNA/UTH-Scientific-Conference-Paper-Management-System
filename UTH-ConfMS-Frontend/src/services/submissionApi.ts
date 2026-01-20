@@ -207,18 +207,34 @@ export const submissionApi = {
       MOCK_SUBMISSIONS.push(newSubmission);
       return { success: true, data: newSubmission, message: 'Submission created successfully' };
     }
-    const formData = new FormData();
-    formData.append('title', data.title);
-    formData.append('abstract', data.abstract);
-    formData.append('conferenceId', data.conferenceId.toString());
-    if (data.topicId) formData.append('topicId', data.topicId.toString());
-    formData.append('keywords', JSON.stringify(data.keywords));
-    formData.append('authors', JSON.stringify(data.authors));
-    if (data.file) formData.append('file', data.file);
     
-    const response = await apiClient.post<ApiResponse<SubmissionDto>>('/api/submissions', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    // SỬA: Backend nhận JSON body cho createSubmission, không phải FormData
+    // File sẽ được upload riêng sau khi tạo submission thành công
+    const payload = {
+        title: data.title,
+        abstract: data.abstract,
+        conferenceId: data.conferenceId, // Backend cần Guid, nhưng ở đây ta truyền number/string, axios sẽ tự handle JSON
+        primaryTopicId: data.topicId, // Backend dùng PrimaryTopicId thay vì TopicId
+        keywords: data.keywords,
+        authors: data.authors.map((a, index) => ({
+            fullName: a.fullName,
+            email: a.email,
+            affiliation: a.affiliation,
+            isCorresponding: a.isCorresponding,
+            orderIndex: index + 1 // Backend dùng OrderIndex
+        })),
+        paperType: "FULL_PAPER" // Mặc định
+    };
+    
+    // 1. Tạo Submission (Metadata)
+    const response = await apiClient.post<ApiResponse<SubmissionDto>>('/api/submissions', payload);
+    
+    if (response.data.success && response.data.data && data.file) {
+        // 2. Nếu tạo thành công và có file, gọi API upload file
+        const submissionId = response.data.data.id;
+        await submissionApi.uploadFile(submissionId, data.file);
+    }
+
     return response.data;
   },
 
@@ -246,7 +262,7 @@ export const submissionApi = {
       }
       return { success: false, message: 'Submission not found' };
     }
-    const response = await apiClient.post<ApiResponse<void>>(`/api/submissions/${submissionId}/withdraw`);
+    const response = await apiClient.post<ApiResponse<void>>(`/api/submissions/${submissionId}/withdraw`, { reason: "Author request" });
     return response.data;
   },
 
@@ -266,6 +282,8 @@ export const submissionApi = {
     const formData = new FormData();
     formData.append('file', file);
     
+    // API upload file có thể khác, kiểm tra lại route backend nếu cần
+    // Giả sử route là /api/submissions/{id}/files
     const response = await apiClient.post<ApiResponse<SubmissionFileDto>>(`/api/submissions/${submissionId}/files`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });

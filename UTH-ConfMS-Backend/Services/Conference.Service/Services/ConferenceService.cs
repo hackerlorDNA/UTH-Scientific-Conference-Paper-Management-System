@@ -30,7 +30,7 @@ public class ConferenceService : IConferenceService
 
         return new PagedResponse<ConferenceDto>
         {
-            Data = items,
+            Items = items,
             TotalCount = totalCount,
             Page = page,
             PageSize = pageSize

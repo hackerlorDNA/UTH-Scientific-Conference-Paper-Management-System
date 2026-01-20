@@ -1,7 +1,15 @@
-import axios from 'axios';
+import apiClient, { ApiResponse, PagedResponse } from './apiClient';
 
-// Dựa trên README, Conference Service chạy ở port 5002
-const API_URL = 'http://localhost:5002/api/conferences';
+export interface ConferenceDto {
+    conferenceId: string; // Backend dùng GUID
+    name: string;
+    acronym: string;
+    description?: string;
+    location?: string;
+    startDate: string;
+    endDate: string;
+    status: string;
+}
 
 export interface CreateConferenceRequest {
     name: string;
@@ -13,18 +21,18 @@ export interface CreateConferenceRequest {
 }
 
 const conferenceApi = {
+    getAll: async (status?: string, page: number = 1, pageSize: number = 10) => {
+        const params = new URLSearchParams();
+        if (status) params.append('status', status);
+        params.append('page', page.toString());
+        params.append('pageSize', pageSize.toString());
+
+        const response = await apiClient.get<ApiResponse<PagedResponse<ConferenceDto>>>(`/api/conferences?${params}`);
+        return response.data;
+    },
+
     create: async (data: CreateConferenceRequest) => {
-        const token = localStorage.getItem('token');
-        
-        // Gọi API tạo hội nghị
-        const response = await axios.post(API_URL, data, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        // Trả về dữ liệu từ backend (theo cấu trúc JSON bạn cung cấp)
+        const response = await apiClient.post<ApiResponse<ConferenceDto>>('/api/conferences', data);
         return response.data;
     }
 };
