@@ -49,7 +49,7 @@ export type ViewState =
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>('home');
-  const [selectedPaperId, setSelectedPaperId] = useState<number | null>(null);
+  const [selectedPaperId, setSelectedPaperId] = useState<string | null>(null);
   const { user, isAuthenticated, isLoading } = useAuth();
 
   // Xử lý Deep Link từ Email (ví dụ: /invite/accept?token=...)

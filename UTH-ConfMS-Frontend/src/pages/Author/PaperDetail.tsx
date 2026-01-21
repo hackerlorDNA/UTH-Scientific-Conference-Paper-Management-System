@@ -3,7 +3,7 @@ import { ViewState } from '../../App';
 import { paperApi, PaperResponse } from '../../services/paper';
 
 interface PaperDetailProps {
-    paperId: number | null;
+    paperId: string | null;
     onNavigate: (view: ViewState) => void;
 }
 
@@ -39,15 +39,26 @@ export const PaperDetail: React.FC<PaperDetailProps> = ({ paperId, onNavigate })
     }, [paperId]);
 
     const handleDownload = async () => {
-        if (!paperId) return;
+        if (!paper || !paper.id) return;
+        
+        // Check if files exist
+        if (!paper.files || paper.files.length === 0) {
+             alert('Không tìm thấy file để tải.');
+             return;
+        }
+
+        // Assuming obtaining the first file for now, or finding one that matches fileName
+        // Backend FilesController: [HttpGet("{fileId:guid}/download")]
+        const fileToDownload = paper.files[0];
+
         try {
-            const response = await paperApi.downloadPaper(paperId);
+            const response = await paperApi.downloadFile(paper.id, fileToDownload.id);
             // Create blob link to download
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
-            // Extract filename if possible, or default
-            const fileName = paper?.fileName || `paper-${paperId}.pdf`; 
+            // Use fileName from file info or paper
+            const fileName = fileToDownload.fileName || paper.fileName || `paper-${paper.id}.pdf`; 
             link.setAttribute('download', fileName); 
             document.body.appendChild(link);
             link.click();
@@ -74,7 +85,12 @@ export const PaperDetail: React.FC<PaperDetailProps> = ({ paperId, onNavigate })
 
                 <div className="flex flex-col gap-6">
                     <div>
-                        <h3 className="font-bold text-sm text-text-sec-light uppercase mb-1">Tóm tắt (Abstract)</h3>
+                        <div className="flex justify-between items-center mb-2">
+                             <h3 className="font-bold text-sm text-text-sec-light uppercase">Tóm tắt (Abstract)</h3>
+                             <span className="text-xs font-mono text-text-sec-light bg-gray-100 px-2 py-1 rounded">
+                                ID: {String(paper.paperNumber || 0).padStart(3, '0')}
+                             </span>
+                        </div>
                         <p className="text-text-main-light dark:text-text-main-dark leading-relaxed whitespace-pre-line">{paper.abstract}</p>
                     </div>
 
@@ -98,7 +114,7 @@ export const PaperDetail: React.FC<PaperDetailProps> = ({ paperId, onNavigate })
                                 className="flex items-center gap-2 text-primary hover:underline font-medium"
                             >
                                 <span className="material-symbols-outlined">description</span>
-                                {paper.fileName || 'Tải file xuống'}
+                                {paper.files && paper.files.length > 0 ? 'Tải file xuống' : (paper.fileName || 'Tải file xuống')}
                             </button>
                         </div>
                     </div>

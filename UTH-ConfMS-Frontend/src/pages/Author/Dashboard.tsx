@@ -5,7 +5,7 @@ import { paperApi, PaperResponse } from '../../services/paper';
 
 interface DashboardProps {
     onNavigate: (view: ViewState) => void;
-    onViewPaper?: (id: number) => void;
+    onViewPaper?: (id: string) => void;
 }
 
 export const AuthorDashboard: React.FC<DashboardProps> = ({ onNavigate, onViewPaper }) => {
@@ -16,11 +16,6 @@ export const AuthorDashboard: React.FC<DashboardProps> = ({ onNavigate, onViewPa
     const fetchSubmissions = async () => {
       try {
         const data = await paperApi.getMyPapers();
-        // Adjust based on your API response structure. 
-        // If data is an array: setSubmissions(data);
-        // If data is { success: true, data: [...] }: setSubmissions(data.data);
-        // Based on previous files, it seems paperApi.getMyPapers returns proper array directly or we handled it in api layer.
-        // Let's assume the API layer unwrap safe logic is there, but check line 28 of wrong file: `const data = await paperApi.getMyPapers(); setSubmissions(data);` seems correct context.
         setSubmissions(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Failed to fetch submissions:', error);
@@ -32,7 +27,7 @@ export const AuthorDashboard: React.FC<DashboardProps> = ({ onNavigate, onViewPa
     fetchSubmissions();
   }, []);
 
-  const handleWithdraw = async (id: number) => {
+  const handleWithdraw = async (id: string) => {
       const reason = window.prompt('Vui lòng nhập lý do rút bài:');
       if (reason) {
           try {
@@ -97,7 +92,7 @@ export const AuthorDashboard: React.FC<DashboardProps> = ({ onNavigate, onViewPa
                                         <th className="p-4 font-bold">Tiêu đề bài báo</th>
                                         <th className="p-4 font-bold">Chủ đề</th>
                                         <th className="p-4 font-bold">Trạng thái</th>
-                                        <th className="p-4 font-bold">Cập nhật</th>
+                                        <th className="p-4 font-bold">Ngày nộp</th>
                                         <th className="p-4 font-bold">Hành động</th>
                                     </tr>
                                 </thead>
@@ -105,7 +100,9 @@ export const AuthorDashboard: React.FC<DashboardProps> = ({ onNavigate, onViewPa
                                     {submissions.length > 0 ? (
                                         submissions.map((sub) => (
                                             <tr key={sub.id} className="hover:bg-background-light dark:hover:bg-gray-800 transition-colors">
-                                                <td className="p-4 font-mono text-xs">#{sub.id}</td>
+                                                <td className="p-4 font-mono text-xs" title={sub.id}>
+                                                    {String(sub.paperNumber || 0).padStart(3, '0')}
+                                                </td>
                                                 <td className="p-4 font-medium max-w-xs truncate" title={sub.title}>{sub.title}</td>
                                                 <td className="p-4">{sub.trackName || 'N/A'}</td>
                                                 <td className="p-4 flex flex-col gap-1">

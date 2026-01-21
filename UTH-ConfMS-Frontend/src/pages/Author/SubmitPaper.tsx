@@ -18,7 +18,7 @@ export const SubmitPaper: React.FC<SubmitProps> = ({ onNavigate }) => {
   const [title, setTitle] = useState('');
   const [abstract, setAbstract] = useState('');
   const [keywords, setKeywords] = useState('');
-  const [topicId, setTopicId] = useState<number | undefined>(undefined);
+  const [topicId, setTopicId] = useState<string | undefined>(undefined);
   const [conferenceId, setConferenceId] = useState<string>(''); // Dùng string cho GUID
   const [authors, setAuthors] = useState<AuthorSubmission[]>([]);
   const [file, setFile] = useState<File | null>(null);
@@ -222,7 +222,7 @@ export const SubmitPaper: React.FC<SubmitProps> = ({ onNavigate }) => {
                             <label className="text-sm font-bold">Chủ đề (Track) <span className="text-red-500">*</span></label>
                             <select 
                                 value={topicId || ''}
-                                onChange={(e) => setTopicId(Number(e.target.value))}
+                                onChange={(e) => setTopicId(e.target.value)}
                                 className="w-full h-10 px-3 rounded border border-border-light focus:ring-2 focus:ring-primary outline-none bg-white"
                             >
                                 <option value="">Chọn chủ đề phù hợp...</option>

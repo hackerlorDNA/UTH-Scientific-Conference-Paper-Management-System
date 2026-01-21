@@ -13,19 +13,28 @@ export interface PaperSubmission {
   abstract: string;
   keywords: string[];
   conferenceId: string;
-  topicId?: number;
+  topicId?: string; // Changed to string (Guid) if TrackId is Guid.
   authors: AuthorSubmission[];
   file: File;
 }
 
+export interface FileInfoDto {
+  id: string; // Guid
+  fileName: string;
+  fileSizeBytes: number;
+  uploadedAt: string;
+}
+
 export interface PaperResponse {
-  id: number;
+  id: string; // Guid - Backend trả về Guid không phải number
+  paperNumber?: number; // Số thứ tự bài báo
   title: string;
   abstract: string;
   status: string; // 'Submitted', 'UnderReview', 'Accepted', 'Rejected'
   trackName?: string;
   submissionDate: string;
   fileName?: string;
+  files?: FileInfoDto[]; // Thêm thông tin files
 }
 
 export const paperApi = {
@@ -66,20 +75,20 @@ export const paperApi = {
   },
 
   // 3. Lấy chi tiết một bài báo theo ID
-  getPaperDetail: async (id: number) => {
+  getPaperDetail: async (id: string) => {
     const response = await apiClient.get<ApiResponse<PaperResponse>>(`/api/submissions/${id}`);
     return response.data;
   },
 
   // 4. Tải file bài báo (Response dạng Blob để trình duyệt tải về)
-  downloadPaper: async (id: number) => {
-    return apiClient.get(`/api/submissions/${id}/download`, {
+  downloadFile: async (submissionId: string, fileId: string) => {
+    return apiClient.get(`/api/submissions/${submissionId}/files/${fileId}/download`, {
       responseType: 'blob', // Quan trọng: báo axios nhận binary data
     });
   },
   
   // 5. Cập nhật bài báo (Re-submit)
-  updatePaper: async (id: number, data: Partial<PaperSubmission>) => {
+  updatePaper: async (id: string, data: Partial<PaperSubmission>) => {
      const formData = new FormData();
      if(data.title) formData.append('title', data.title);
      if(data.abstract) formData.append('abstract', data.abstract);
@@ -95,7 +104,7 @@ export const paperApi = {
   },
 
   // 6. Rút bài báo
-  withdrawPaper: async (id: number, reason: string) => {
+  withdrawPaper: async (id: string, reason: string) => {
       const response = await apiClient.post<ApiResponse<void>>(`/api/submissions/${id}/withdraw`, { reason });
       return response.data;
   }
