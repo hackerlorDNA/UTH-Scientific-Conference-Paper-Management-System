@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+pydantic
+requests
+# langchains and spacy can be added later as needed to keep image small for now

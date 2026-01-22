@@ -6,6 +6,9 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791)](https://www.postgresql.org/)
 [![Redis](https://img.shields.io/badge/Redis-7-dc382d)](https://redis.io/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ed)](https://www.docker.com/)
+[![Python](https://img.shields.io/badge/Python-3.11-blue)](https://www.python.org/)
+[![RabbitMQ](https://img.shields.io/badge/RabbitMQ-3.12-orange)](https://www.rabbitmq.com/)
+[![Kafka](https://img.shields.io/badge/Kafka-3.x-black)](https://kafka.apache.org/)
 
 ---
 
@@ -38,10 +41,23 @@ UTH-ConfMS là hệ thống quản lý hội nghị khoa học toàn diện, đ�
 │         API Gateway (Ocelot) - Port 5000              │
 └─┬──────┬──────┬──────┬──────┬──────────────────────┬──┘
   │      │      │      │      │                      │
-┌─▼──┐┌──▼──┐┌──▼──┐┌──▼──┐┌──▼──┐              ┌────▼────┐
-│Iden││Conf ││Subm ││Rev  ││Noti│              │PostgreSQL│
-│:5001││:5002││:5003││:5004││:5005│◄────────────┤  Redis  │
-└────┘└─────┘└─────┘└─────┘└─────┘              └─────────┘
+┌─▼──┐┌──▼──┐┌──▼──┐┌──▼──┐┌──▼──┐┌──▼──┐         ┌────▼────┐
+│Iden││Conf ││Subm ││Rev  ││Noti││ AI │         │PostgreSQL│
+│:5001││:5002││:5003││:5004││:5005││:8000│◄────────┤  Redis  │
+└────┘└─────┘└─────┘└─────┘└─────┘└─────┘         └─────────┘
+   ▲      ▲      ▲      ▲      ▲      ▲
+   │      │      │      │      │      │
+   ▼      ▼      ▼      ▼      ▼      ▼
+┌───────────────────────────────────────┐
+│              RabbitMQ                 │
+│           (Event Bus)                 │
+└───────────────────────────────────────┘
+   │
+   ▼
+┌──────────────┐
+│ Apache Kafka │
+│ (Audit Logs) │
+└──────────────┘
 ```
 
 ### Microservices
@@ -53,6 +69,7 @@ UTH-ConfMS là hệ thống quản lý hội nghị khoa học toàn diện, đ�
 | **Submission** | 5003 | Paper submissions, file management |
 | **Review** | 5004 | Review assignments, decisions |
 | **Notification** | 5005 | Email & in-app notifications |
+| **AI Service** | 8000 | Python AI Service (NLP, Suggestions) |
 | **API Gateway** | 5000 | Routing, authentication |
 | **Frontend** | 3000 | React web application |
 
@@ -200,6 +217,14 @@ UTH-Scientific-Conference-Paper-Management-System/
 | **Templates** | Quản lý email templates |
 | **Scheduling** | Lên lịch gửi thông báo |
 | **Preferences** | Cài đặt tùy chọn nhận thông báo |
+
+### 6. **AI.Service** (Port 8000 - Python)
+| Nhiệm vụ | Mô tả |
+|----------|-------|
+| **Spell Check** | Kiểm tra chính tả, ngữ pháp (Local LLM/Spacy) |
+| **Summarization** | Tóm tắt bài báo (Abstract summarization) |
+| **Matching** | Gợi ý Reviewer phù hợp với bài báo (TF-IDF/Embeddings) |
+
 
 ### 6. **API Gateway** (Port 5000)
 | Nhiệm vụ | Mô tả |
