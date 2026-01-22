@@ -2,14 +2,17 @@
 import React, { useEffect, useState } from 'react';
 import { ViewState } from '../../App';
 import conferenceApi, { ConferenceDto } from '../../services/conferenceApi';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface DashboardProps {
     onNavigate: (view: ViewState) => void;
+    onManageConference?: (conferenceId: string) => void;
 }
 
-export const ChairDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
+export const ChairDashboard: React.FC<DashboardProps> = ({ onNavigate, onManageConference }) => {
     const [conferences, setConferences] = useState<ConferenceDto[]>([]);
     const [loading, setLoading] = useState(true);
+    const { user } = useAuth();
 
     useEffect(() => {
         const fetchConferences = async () => {
@@ -64,22 +67,38 @@ export const ChairDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border-light">
-                                {conferences.map((conf) => (
-                                    <tr key={conf.conferenceId} className="hover:bg-gray-50 transition-colors">
-                                        <td className="p-3 font-medium">{conf.name}</td>
-                                        <td className="p-3 font-mono text-primary">{conf.acronym}</td>
-                                        <td className="p-3">{conf.location || 'N/A'}</td>
-                                        <td className="p-3">{conf.startDate ? new Date(conf.startDate).toLocaleDateString('vi-VN') : 'N/A'}</td>
-                                        <td className="p-3">
-                                            <span className={`px-2 py-1 rounded text-xs font-bold ${conf.status === 'PUBLISHED' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                                                {conf.status || 'DRAFT'}
-                                            </span>
-                                        </td>
-                                        <td className="p-3">
-                                            <button className="text-primary hover:underline font-medium">Quản lý</button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {conferences.map((conf) => {
+                                    const isOwner = user?.id === conf.createdBy;
+                                    return (
+                                        <tr key={conf.conferenceId} className="hover:bg-gray-50 transition-colors">
+                                            <td className="p-3 font-medium">{conf.name}</td>
+                                            <td className="p-3 font-mono text-primary">{conf.acronym}</td>
+                                            <td className="p-3">{conf.location || 'N/A'}</td>
+                                            <td className="p-3">{conf.startDate ? new Date(conf.startDate).toLocaleDateString('vi-VN') : 'N/A'}</td>
+                                            <td className="p-3">
+                                                <span className={`px-2 py-1 rounded text-xs font-bold ${conf.status === 'PUBLISHED' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                                                    {conf.status || 'DRAFT'}
+                                                </span>
+                                            </td>
+                                            <td className="p-3">
+                                                {isOwner ? (
+                                                    <button
+                                                        onClick={() => {
+                                                            if (onManageConference) {
+                                                                onManageConference(conf.conferenceId);
+                                                            } else {
+                                                                onNavigate('cfp-management');
+                                                            }
+                                                        }}
+                                                        className="text-primary hover:underline font-medium"
+                                                    >
+                                                        Quản lý CFP & Publish
+                                                    </button>
+                                                ) : null}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     )}

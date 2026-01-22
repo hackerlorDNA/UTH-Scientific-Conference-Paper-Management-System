@@ -16,6 +16,7 @@ export interface ConferenceDto {
     location?: string;
     website?: string;
     createdAt: string;
+    createdBy: string;
 }
 
 export interface ConferenceDetailDto extends ConferenceDto {
@@ -58,6 +59,29 @@ export interface CreateConferenceRequest {
     cameraReadyDeadline?: string;
     location?: string;
     website?: string;
+}
+
+export interface CallForPapersDto {
+    cfpId: string;
+    conferenceId: string;
+    title: string;
+    content: string;
+    submissionGuidelines?: string;
+    formattingRequirements?: string;
+    minPages?: number;
+    maxPages?: number;
+    isPublished: boolean;
+    publishedAt?: string;
+}
+
+export interface UpdateCallForPapersRequest {
+    title?: string;
+    content?: string;
+    submissionGuidelines?: string;
+    formattingRequirements?: string;
+    minPages?: number;
+    maxPages?: number;
+    isPublished?: boolean;
 }
 
 // Mock topics data
@@ -117,6 +141,17 @@ export const conferenceApi = {
             return { success: true, data: MOCK_TOPICS };
         }
         const response = await apiClient.get<ApiResponse<TopicDto[]>>(`/api/conferences/${conferenceId}/topics`);
+        return response.data;
+    },
+
+    // Call for Papers
+    getCallForPapers: async (conferenceId: string): Promise<ApiResponse<CallForPapersDto>> => {
+        const response = await apiClient.get<ApiResponse<CallForPapersDto>>(`/api/conferences/${conferenceId}/cfp`);
+        return response.data;
+    },
+
+    updateCallForPapers: async (conferenceId: string, data: UpdateCallForPapersRequest): Promise<ApiResponse<CallForPapersDto>> => {
+        const response = await apiClient.put<ApiResponse<CallForPapersDto>>(`/api/conferences/${conferenceId}/cfp`, data);
         return response.data;
     },
 };
