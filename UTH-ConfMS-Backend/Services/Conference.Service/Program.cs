@@ -12,6 +12,7 @@ using Conference.Service.Interfaces;
 using Conference.Service.Interfaces.Repositories; // TODO: Add interface repositories
 using Conference.Service.Interfaces.Services; // TODO: Add interface services
 using Conference.Service.Repositories; // TODO: Add repositories
+using MassTransit;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
@@ -132,6 +133,19 @@ builder.Services.AddHttpClient<Conference.Service.Integrations.IIdentityIntegrat
     client.BaseAddress = new Uri(builder.Configuration["IdentityService:BaseUrl"] ?? "http://identity-service:5001");
 });
 
+// MassTransit
+builder.Services.AddMassTransit(x =>
+{
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        var rabbitMqHost = builder.Configuration.GetConnectionString("RabbitMQ") ?? "rabbitmq";
+        cfg.Host(rabbitMqHost, "/", h =>
+        {
+            h.Username("guest");
+            h.Password("guest");
+        });
+    });
+});
 
 // AutoMapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

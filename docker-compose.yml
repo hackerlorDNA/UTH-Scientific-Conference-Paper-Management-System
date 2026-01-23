@@ -218,7 +218,7 @@ services:
       - Email__SmtpUsername=${SMTP_EMAIL}
       - Email__FromEmail=${SMTP_EMAIL}
       - Email__FromName=${SMTP_NAME}
-      - Email__Password=${SMTP_PASSWORD}
+      - Email__SmtpPassword=${SMTP_PASSWORD}
     ports:
       - "5005:5005"
     depends_on:

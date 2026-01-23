@@ -5,6 +5,8 @@ using Conference.Service.DTOs.Responses;
 using Conference.Service.Entities;
 using Conference.Service.Interfaces;
 using Conference.Service.Interfaces.Services;
+using MassTransit;
+using UTH.ConfMS.Shared.Infrastructure.EventBus;
 
 namespace Conference.Service.Services;
 
@@ -14,13 +16,15 @@ public class ConferenceService : IConferenceService
     private readonly ILogger<ConferenceService> _logger;
     private readonly IMapper _mapper;
     private readonly Conference.Service.Integrations.IIdentityIntegration _identityIntegration;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public ConferenceService(IUnitOfWork unitOfWork, ILogger<ConferenceService> logger, IMapper mapper, Conference.Service.Integrations.IIdentityIntegration identityIntegration)
+    public ConferenceService(IUnitOfWork unitOfWork, ILogger<ConferenceService> logger, IMapper mapper, Conference.Service.Integrations.IIdentityIntegration identityIntegration, IPublishEndpoint publishEndpoint)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
         _mapper = mapper;
         _identityIntegration = identityIntegration;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<PagedResponse<ConferenceDto>> GetConferencesAsync(string? status, int page, int pageSize)
@@ -304,17 +308,11 @@ public class ConferenceService : IConferenceService
                         dto.FullName = user.FullName;
                         dto.Email = user.Email;
                     }
-                    else
-                    {
-                         // Fallback if user not found (deleted? or temp error)
-                         // dto.FullName = "Unknown User";
-                    }
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to enrich committee members with user details");
-                // Consume error and return list with empty names rather than failing request
             }
         }
 
@@ -329,8 +327,6 @@ public class ConferenceService : IConferenceService
         var existing = await _unitOfWork.CommitteeMembers.GetByConferenceAndUserAsync(conferenceId, request.UserId);
         if (existing != null)
         {
-             // Already member, update role? Or throw?
-             // For now, simple return or throw. Let's throw.
              throw new InvalidOperationException("User is already a committee member");
         }
 
@@ -345,6 +341,35 @@ public class ConferenceService : IConferenceService
 
         await _unitOfWork.CommitteeMembers.CreateAsync(member);
         await _unitOfWork.SaveChangesAsync();
+
+        // Send Email Notification
+        try 
+        {
+            var user = (await _identityIntegration.GetUsersByIdsAsync(new List<Guid> { request.UserId })).FirstOrDefault();
+            if (user != null && !string.IsNullOrEmpty(user.Email))
+            {
+                await _publishEndpoint.Publish(new SendEmailEvent
+                {
+                    ToEmail = user.Email,
+                    Subject = $"[UTH-ConfMS] Invitation to Program Committee: {conference.Name} ({conference.Acronym})",
+                    Body = $@"
+                        <h1>Invitation to Program Committee</h1>
+                        <p>Dear {user.FullName},</p>
+                        <p>You have been invited to join the Program Committee for the conference <strong>{conference.Name} ({conference.Acronym})</strong>.</p>
+                        <p>Your role: <strong>{request.Role}</strong></p>
+                        <p>Please log in to the system to view details and manage your assignments.</p>
+                        <p><a href='http://localhost:3000/invite/accept?conference={conference.ConferenceId}'>Click here to access</a></p>
+                        <br/>
+                        <p>Best regards,</p>
+                        <p>UTH Conference Management System</p>"
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish SendEmailEvent for user {UserId}", request.UserId);
+            // Don't block the main flow
+        }
 
         return _mapper.Map<CommitteeMemberDto>(member);
     }

@@ -67,6 +67,8 @@ public class EmailService : IEmailService
                  client.CheckCertificateRevocation = false;
 
                  _logger.LogInformation("Connecting to SMTP {Host}:{Port}", _emailSettings.SmtpHost, _emailSettings.SmtpPort);
+                 _logger.LogInformation("DEBUG config: User={User}, PassLen={PassLen}", _emailSettings.SmtpUsername, _emailSettings.SmtpPassword?.Length ?? 0);
+                 
                  await client.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, SecureSocketOptions.StartTls);
                  
                  _logger.LogInformation("Authenticating with {User}", _emailSettings.SmtpUsername);
