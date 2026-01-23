@@ -8,6 +8,7 @@ namespace Identity.Service.Interfaces.Repositories;
 public interface IUserRepository
 {
     Task<User?> GetByIdAsync(Guid userId);
+    Task<List<User>> GetByIdsAsync(List<Guid> userIds);
     Task<User?> GetByIdWithRolesAsync(Guid userId);
     Task<User?> GetByEmailAsync(string email);
     Task<User?> GetByEmailWithRolesAsync(string email);

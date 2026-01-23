@@ -44,6 +44,26 @@ public class UserService : IUserService
         };
     }
 
+    public async Task<List<UserDto>> GetUsersByIdsAsync(List<Guid> userIds)
+    {
+        if (userIds == null || !userIds.Any()) return new List<UserDto>();
+
+        var users = await _unitOfWork.Users.GetByIdsAsync(userIds);
+        
+        return users.Select(u => new UserDto
+        {
+            Id = u.UserId,
+            Email = u.Email,
+            Username = u.Username,
+            FullName = u.FullName,
+            Affiliation = u.Affiliation,
+            CreatedAt = u.CreatedAt
+            // We skip roles here to keep it lightweight, or fetch if needed. DTO implies nullable?
+            // Actually DTO has Roles list. Let's send empty list or fetch? 
+            // For committee listing, we don't strictly need system roles.
+        }).ToList();
+    }
+
     public async Task<UserDto> UpdateUserAsync(Guid userId, UpdateUserRequest request)
     {
         var user = await _unitOfWork.Users.GetByIdAsync(userId);

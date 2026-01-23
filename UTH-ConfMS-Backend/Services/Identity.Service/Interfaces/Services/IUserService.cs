@@ -9,6 +9,7 @@ public interface IUserService
     // User operations
     Task<UserDto> GetUserByIdAsync(Guid userId);
     Task<UserDto> UpdateUserAsync(Guid userId, UpdateUserRequest request);
+    Task<List<UserDto>> GetUsersByIdsAsync(List<Guid> userIds);
     Task<PagedResponse<UserDto>> SearchUsersAsync(string query, int page, int pageSize);
     Task<List<RoleDto>> GetUserRolesAsync(Guid userId, Guid? conferenceId);
     Task AssignRoleAsync(Guid userId, AssignRoleRequest request);

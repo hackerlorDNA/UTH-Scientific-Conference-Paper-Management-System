@@ -126,6 +126,13 @@ builder.Services.AddScoped<IDeadlineRepository, Conference.Service.Repositories.
 builder.Services.AddScoped<ICallForPapersRepository, Conference.Service.Repositories.CallForPapersRepository>();
 builder.Services.AddScoped<IConferenceService, Conference.Service.Services.ConferenceService>();
 
+// Integrations
+builder.Services.AddHttpClient<Conference.Service.Integrations.IIdentityIntegration, Conference.Service.Integrations.HttpIdentityIntegration>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["IdentityService:BaseUrl"] ?? "http://identity-service:5001");
+});
+
+
 // AutoMapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
@@ -144,6 +151,8 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
+
+builder.Services.AddHttpContextAccessor(); // Required for Token Propagation
 
 // Health checks
 builder.Services.AddHealthChecks()

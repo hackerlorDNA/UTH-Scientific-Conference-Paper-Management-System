@@ -22,6 +22,13 @@ public class UserRepository : IUserRepository
         return await _context.Users.FindAsync(userId);
     }
 
+    public async Task<List<User>> GetByIdsAsync(List<Guid> userIds)
+    {
+        return await _context.Users
+            .Where(u => userIds.Contains(u.UserId))
+            .ToListAsync();
+    }
+
     public async Task<User?> GetByIdWithRolesAsync(Guid userId)
     {
         return await _context.Users

@@ -75,6 +75,32 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
+    /// Get multiple users by IDs (Batch)
+    /// </summary>
+    [HttpPost("batch")]
+    public async Task<IActionResult> GetUsersBatch([FromBody] List<Guid> userIds)
+    {
+        try
+        {
+            var users = await _userService.GetUsersByIdsAsync(userIds);
+            return Ok(new ApiResponse<List<UserDto>>
+            {
+                Success = true,
+                Data = users
+            });
+        }
+        catch (Exception ex)
+        {
+             _logger.LogError(ex, "Batch get users failed");
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Internal server error"
+            });
+        }
+    }
+
+    /// <summary>
     /// cập nhật thông tin người dùng
     /// </summary>
     [HttpPut("{userId:guid}")]
