@@ -169,5 +169,35 @@ namespace Review.Service.Services
 
             return availableReviewers;
         }
+
+        public async Task<bool> RespondToAssignmentAsync(int assignmentId, bool isAccepted, string userId)
+        {
+            var assignment = await _context.Assignments
+                .Include(a => a.Reviewer)
+                .FirstOrDefaultAsync(a => a.Id == assignmentId);
+
+            if (assignment == null) throw new Exception("Assignment not found.");
+            if (assignment.Reviewer == null) throw new Exception("Reviewer not found for this assignment.");
+
+            // Nếu Reviewer có mapping tới UserId, kiểm tra quyền
+            if (!string.IsNullOrEmpty(assignment.Reviewer.UserId) && assignment.Reviewer.UserId != userId)
+            {
+                throw new Exception("Bạn không có quyền phản hồi phân công này.");
+            }
+
+            // Chỉ cho phép thay đổi từ Pending sang Accepted/Rejected
+            if (assignment.Status == "Completed")
+            {
+                throw new Exception("Assignment đã hoàn thành, không thể thay đổi trạng thái.");
+            }
+
+            assignment.Status = isAccepted ? "Accepted" : "Rejected";
+
+            _context.Assignments.Update(assignment);
+            await _context.SaveChangesAsync();
+
+            // TODO: Gửi notification/event cho Chair nếu cần
+            return true;
+        }
     }
 }

@@ -16,6 +16,8 @@ namespace Review.Service.Interfaces
         /// </summary>
         Task<ReviewSummaryDTO> GetReviewSummaryAsync(string paperId);
 
+        Task<IEnumerable<ReviewAssignmentDTO>> GetAssignmentsForReviewerAsync(string userId, string? status = null, int page = 1, int pageSize = 20);
+
         /// <summary>
         /// Lấy danh sách bài nộp cần đưa ra quyết định (dành cho Chair)
         /// </summary>

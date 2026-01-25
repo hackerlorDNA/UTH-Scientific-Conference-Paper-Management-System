@@ -1,11 +1,30 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PDFPreview } from '../../components/PDFPreview';
 import { AIBadge } from '../../components/AIBadge';
 import { ReviewForm } from '../../components/ReviewForm';
+import { reviewerApi, ReviewerInvitationDto } from '../../services/reviewerApi';
 
 export const ReviewerDashboard: React.FC = () => {
   const [selectedPaper, setSelectedPaper] = useState<number | null>(null);
+    const [invitations, setInvitations] = useState<ReviewerInvitationDto[]>([]);
+    const [showInvitations, setShowInvitations] = useState(false);
+
+    const fetchInvitations = async () => {
+        try {
+            const resp = await reviewerApi.getMyInvitations();
+            // apiClient returns ApiResponse wrapper; some endpoints return raw arrays in this project
+            const data = (resp as any).data ?? (resp as any);
+            setInvitations(data);
+        } catch (err) {
+            console.error('Failed to load invitations', err);
+        }
+    };
+
+    useEffect(() => {
+        // Load invitations once when dashboard mounts
+        fetchInvitations();
+    }, []);
 
   return (
     <div className="w-full bg-background-light dark:bg-background-dark py-8 px-5 md:px-10 flex justify-center">
@@ -13,7 +32,46 @@ export const ReviewerDashboard: React.FC = () => {
             
             {/* Paper List */}
             <div className={`lg:col-span-${selectedPaper ? '1' : '3'} flex flex-col gap-4 transition-all`}>
-                <h1 className="text-2xl font-bold text-text-main-light dark:text-text-main-dark mb-2">Bài được phân công</h1>
+                <div className="flex items-center justify-between">
+                    <h1 className="text-2xl font-bold text-text-main-light dark:text-text-main-dark mb-2">Bài được phân công</h1>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => { setShowInvitations(!showInvitations); if (!showInvitations) fetchInvitations(); }}
+                            className="px-3 py-1 bg-primary hover:bg-primary-hover text-white font-medium rounded-md shadow-sm transition flex items-center gap-2"
+                            aria-label="Lời mời phân công"
+                        >
+                            <span className="material-symbols-outlined">assignment</span>
+                            Lời mời phân công {invitations.filter(i => i.status === 'Pending').length > 0 && (
+                                <span className="ml-2 text-sm text-white bg-red-600 px-2 py-0.5 rounded">{invitations.filter(i => i.status === 'Pending').length}</span>
+                            )}
+                        </button>
+                    </div>
+                </div>
+
+                {showInvitations && (
+                    <div className="mb-4 p-4 bg-white dark:bg-card-dark border border-border-light rounded-lg">
+                        <h3 className="font-semibold mb-2">Lời mời phân công của bạn</h3>
+                        {invitations.length === 0 && <p className="text-sm text-text-sec-light">Không có lời mời nào.</p>}
+                        {invitations.map(inv => (
+                            <div key={inv.id} className="flex items-center justify-between p-2 border-b last:border-b-0">
+                                <div>
+                                    <div className="font-medium">{inv.fullName}</div>
+                                    <div className="text-xs text-text-sec-light">{inv.email} • {new Date(inv.sentAt).toLocaleString()}</div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {inv.status === 'Pending' ? (
+                                        <>
+                                            <button onClick={async () => { await reviewerApi.respondInvitation({ token: inv.token ?? '', isAccepted: true }); await fetchInvitations(); }} className="px-3 py-1 bg-green-500 text-white rounded">Chấp nhận</button>
+                                            <button onClick={async () => { await reviewerApi.respondInvitation({ token: inv.token ?? '', isAccepted: false }); await fetchInvitations(); }} className="px-3 py-1 bg-red-500 text-white rounded">Từ chối</button>
+                                        </>
+                                    ) : (
+                                        <span className="text-sm text-text-sec-light">{inv.status}</span>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
                 {[1, 2, 3].map((id) => (
                     <div 
                         key={id} 

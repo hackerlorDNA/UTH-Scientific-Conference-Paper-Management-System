@@ -21,13 +21,15 @@ public class ReviewerService : IReviewerService
     private readonly ILogger<ReviewerService> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _configuration;
+    private readonly Microsoft.AspNetCore.Http.IHttpContextAccessor _httpContextAccessor;
 
-    public ReviewerService(ReviewDbContext context, ILogger<ReviewerService> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public ReviewerService(ReviewDbContext context, ILogger<ReviewerService> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration, Microsoft.AspNetCore.Http.IHttpContextAccessor httpContextAccessor)
     {
         _context = context;
         _logger = logger;
         _httpClientFactory = httpClientFactory;
         _configuration = configuration;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<ReviewerInvitation> InviteReviewerAsync(InviteReviewerDTO dto)
@@ -117,26 +119,41 @@ public class ReviewerService : IReviewerService
                 throw new ArgumentException("User ID is required to accept the invitation.");
             }
 
-            // Kiểm tra xem user đã là Reviewer chưa để tránh lỗi trùng lặp
-            var alreadyExists = await _context.Reviewers
-                .AnyAsync(r => r.UserId == userId && r.ConferenceId == invitation.ConferenceId);
+            // Nếu đã có reviewer được tạo trước (ví dụ Chair đã assign bằng email), cập nhật UserId cho bản ghi đó
+            var existingByEmail = await _context.Reviewers
+                .FirstOrDefaultAsync(r => r.Email == invitation.Email && r.ConferenceId == invitation.ConferenceId);
 
-            if (!alreadyExists)
+            if (existingByEmail != null)
             {
-                // Thêm vào bảng Reviewers
-                var reviewer = new Reviewer
+                // Gán UserId nếu chưa có hoặc khác
+                if (string.IsNullOrEmpty(existingByEmail.UserId) || existingByEmail.UserId != userId)
                 {
-                    UserId = userId,
-                    ConferenceId = invitation.ConferenceId,
-                    Email = invitation.Email,
-                    FullName = invitation.FullName,
-                    Expertise = "General", // Mặc định, user sẽ cập nhật sau
-                };
-                _context.Reviewers.Add(reviewer);
+                    existingByEmail.UserId = userId;
+                    _context.Reviewers.Update(existingByEmail);
+                }
             }
             else
             {
-                _logger.LogWarning($"User {userId} is already a reviewer for conference {invitation.ConferenceId}.");
+                // Nếu không có reviewer theo email, kiểm tra theo UserId
+                var alreadyExists = await _context.Reviewers
+                    .AnyAsync(r => r.UserId == userId && r.ConferenceId == invitation.ConferenceId);
+
+                if (!alreadyExists)
+                {
+                    var reviewer = new Reviewer
+                    {
+                        UserId = userId,
+                        ConferenceId = invitation.ConferenceId,
+                        Email = invitation.Email,
+                        FullName = invitation.FullName,
+                        Expertise = "General",
+                    };
+                    _context.Reviewers.Add(reviewer);
+                }
+                else
+                {
+                    _logger.LogWarning($"User {userId} is already a reviewer for conference {invitation.ConferenceId}.");
+                }
             }
         }
 
@@ -149,4 +166,54 @@ public class ReviewerService : IReviewerService
 
     public async Task<List<ReviewerInvitation>> GetInvitationsByConferenceAsync(int conferenceId)
         => await _context.ReviewerInvitations.Where(i => i.ConferenceId == conferenceId).ToListAsync();
+
+    public async Task<List<ReviewerInvitation>> GetInvitationsForUserAsync(string userId)
+    {
+        try
+        {
+            var client = _httpClientFactory.CreateClient();
+            var identityUrl = _configuration["ServiceUrls:Identity"] ?? "http://localhost:5001";
+
+            // Propagate bearer token from current request if present
+            var token = _httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
+            if (!string.IsNullOrEmpty(token))
+            {
+                client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", token);
+            }
+
+            // Call Identity Service to get user info (email)
+            var response = await client.GetAsync($"{identityUrl}/api/users/{userId}");
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Failed to fetch user from Identity Service for {UserId}. Status: {Status}", userId, response.StatusCode);
+                return new List<ReviewerInvitation>();
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            // Expect ApiResponse<UserDto> shape
+            using var doc = JsonDocument.Parse(content);
+            var root = doc.RootElement;
+            if (root.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Object)
+            {
+                string? email = null;
+                if (data.TryGetProperty("email", out var emailProp))
+                {
+                    email = emailProp.GetString();
+                }
+
+                if (!string.IsNullOrEmpty(email))
+                {
+                    return await _context.ReviewerInvitations.Where(i => i.Email == email).ToListAsync();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching invitations for user {UserId}", userId);
+        }
+
+        return new List<ReviewerInvitation>();
+    }
 }

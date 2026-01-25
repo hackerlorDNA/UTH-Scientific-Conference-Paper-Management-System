@@ -1,0 +1,14 @@
+namespace Review.Service.DTOs
+{
+    public class ReviewAssignmentDTO
+    {
+        public int Id { get; set; }
+        public string PaperId { get; set; }
+        public string? SubmissionTitle { get; set; }
+        public int ConferenceId { get; set; }
+        public string Status { get; set; }
+        public string AssignedAt { get; set; }
+        public string? DueDate { get; set; }
+        public bool IsCompleted { get; set; }
+    }
+}

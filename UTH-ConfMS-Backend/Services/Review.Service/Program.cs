@@ -8,6 +8,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Review.Service.Data;
 using Review.Service.Services;
+using Review.Service.Interfaces;
 // using Review.Service.DTOs.Common; // TODO: Add DTOs
 // using Review.Service.DTOs.Requests; // TODO: Add DTOs
 // using Review.Service.DTOs.Responses; // TODO: Add DTOs
@@ -150,6 +151,9 @@ builder.Services.AddHealthChecks()
     .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!);
 
 builder.Services.AddHttpClient();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IReviewerService, Review.Service.Services.ReviewerService>();
+
 
 var app = builder.Build();
 

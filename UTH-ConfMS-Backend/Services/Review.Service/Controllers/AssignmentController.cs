@@ -4,12 +4,13 @@ using Review.Service.DTOs;
 using Review.Service.Interfaces;
 using System.Threading.Tasks;
 using System;
+using System.Security.Claims;
 
 namespace Review.Service.Controllers
 {
     [ApiController]
     [Route("api/assignments")]
-    [Authorize(Roles = "chair,admin")]
+    [Authorize]
     public class AssignmentController : ControllerBase
     {
         private readonly IAssignmentService _assignmentService;
@@ -58,5 +59,41 @@ namespace Review.Service.Controllers
             var result = await _assignmentService.GetAvailableReviewersAsync(paperId);
             return Ok(result);
         }
+
+            // POST: api/assignments/{assignmentId}/accept
+            [HttpPost("{assignmentId}/accept")]
+            [Authorize]
+            public async Task<IActionResult> AcceptAssignment(int assignmentId)
+            {
+                try
+                {
+                    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0";
+                    var result = await _assignmentService.RespondToAssignmentAsync(assignmentId, true, userId);
+                    if (result) return Ok(new { message = "Đã chấp nhận phân công." });
+                    return BadRequest(new { message = "Không thể chấp nhận phân công." });
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(new { message = ex.Message });
+                }
+            }
+
+            // POST: api/assignments/{assignmentId}/reject
+            [HttpPost("{assignmentId}/reject")]
+            [Authorize]
+            public async Task<IActionResult> RejectAssignment(int assignmentId)
+            {
+                try
+                {
+                    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0";
+                    var result = await _assignmentService.RespondToAssignmentAsync(assignmentId, false, userId);
+                    if (result) return Ok(new { message = "Đã từ chối phân công." });
+                    return BadRequest(new { message = "Không thể từ chối phân công." });
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(new { message = ex.Message });
+                }
+            }
     }
 }

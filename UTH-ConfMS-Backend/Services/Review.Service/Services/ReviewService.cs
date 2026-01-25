@@ -215,6 +215,36 @@ namespace Review.Service.Services
             return summary;
         }
 
+        public async Task<IEnumerable<ReviewAssignmentDTO>> GetAssignmentsForReviewerAsync(string userId, string? status = null, int page = 1, int pageSize = 20)
+        {
+            if (string.IsNullOrEmpty(userId) || userId == "0") return new List<ReviewAssignmentDTO>();
+
+            // Lọc các phân công đã được reviewer chấp nhận hoặc đã hoàn thành
+            var query = from a in _context.Assignments
+                        join r in _context.Reviewers on a.ReviewerId equals r.Id
+                        where r.UserId == userId && (a.Status == "Accepted" || a.Status == "Completed")
+                        select new ReviewAssignmentDTO
+                        {
+                            Id = a.Id,
+                            PaperId = a.PaperId,
+                            SubmissionTitle = null,
+                            ConferenceId = r.ConferenceId,
+                            Status = a.Status,
+                            AssignedAt = a.AssignedDate.ToString("o"),
+                            DueDate = null,
+                            IsCompleted = a.Status == "Completed"
+                        };
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                query = query.Where(x => x.Status.ToLower() == status.ToLower());
+            }
+
+            var skipped = (page - 1) * pageSize;
+            var list = await query.Skip(skipped).Take(pageSize).ToListAsync();
+            return list;
+        }
+
         public async Task<List<SubmissionForDecisionDTO>> GetSubmissionsForDecisionAsync(int? conferenceId = null)
         {
             // Lấy tất cả Assignments

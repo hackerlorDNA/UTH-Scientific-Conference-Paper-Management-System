@@ -18,6 +18,7 @@ export interface ReviewerInvitationDto {
   id: number;
   email: string;
   fullName: string;
+  token?: string;
   status: 'Pending' | 'Accepted' | 'Declined';
   sentAt: string;
 }
@@ -36,6 +37,11 @@ export const reviewerApi = {
   // 3. Chair: Lấy danh sách các lời mời đã gửi (để theo dõi trạng thái)
   getInvitations: async (conferenceId: number) => {
     return apiClient.get<ReviewerInvitationDto[]>(`/reviewers/invitations/${conferenceId}`);
+  },
+
+  // 3b. Reviewer: Lấy lời mời của user hiện tại
+  getMyInvitations: async () => {
+    return apiClient.get<ReviewerInvitationDto[]>(`/reviewers/my-invitations`);
   },
 
   // 4. Chair: Lấy danh sách Reviewer chính thức của hội nghị

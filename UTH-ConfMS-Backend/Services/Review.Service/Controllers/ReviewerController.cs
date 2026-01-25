@@ -79,5 +79,24 @@ namespace Review.Service.Controllers
             var invitations = await _reviewerService.GetInvitationsByConferenceAsync(conferenceId);
             return Ok(invitations);
         }
+
+        // 5. Lấy danh sách lời mời dành cho reviewer hiện tại
+        [HttpGet("my-invitations")]
+        [Authorize]
+        public async Task<IActionResult> GetMyInvitations()
+        {
+            try
+            {
+                var userId = GetUserId();
+                if (userId == "0") return Unauthorized(new { message = "Unauthorized" });
+
+                var invitations = await _reviewerService.GetInvitationsForUserAsync(userId);
+                return Ok(invitations);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

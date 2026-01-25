@@ -131,6 +131,22 @@ namespace Review.Service.Controllers
             }
         }
 
+        // API: Lấy danh sách phân công (cho reviewer hiện tại) - chỉ show những phân công thực sự (Accepted/Completed)
+        [HttpGet("assignments")]
+        public async Task<IActionResult> GetMyAssignments([FromQuery] string? status = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        {
+            try
+            {
+                var userId = GetUserId();
+                var assignments = await _reviewService.GetAssignmentsForReviewerAsync(userId, status, page, pageSize);
+                return Ok(ApiResponse<IEnumerable<ReviewAssignmentDTO>>.SuccessResponse(assignments));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message));
+            }
+        }
+
         [HttpPost("decision")]
         [AllowAnonymous] // Tạm thời để test demo
         public async Task<IActionResult> SubmitDecision([FromBody] SubmitDecisionDTO dto)
