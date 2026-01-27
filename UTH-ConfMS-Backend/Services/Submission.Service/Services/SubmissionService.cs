@@ -4,6 +4,7 @@ using Submission.Service.DTOs.Responses;
 using Submission.Service.Entities;
 using Submission.Service.Interfaces;
 using Submission.Service.Interfaces.Services;
+using Submission.Service.DTOs.External;
 using SubmissionEntity = Submission.Service.Entities.Submission;
 
 namespace Submission.Service.Services;
