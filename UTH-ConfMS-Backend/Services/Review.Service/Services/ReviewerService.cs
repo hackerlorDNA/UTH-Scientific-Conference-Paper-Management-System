@@ -156,6 +156,37 @@ public class ReviewerService : IReviewerService
                     _logger.LogWarning($"User {userId} is already a reviewer for conference {invitation.ConferenceId}.");
                 }
             }
+
+            // --- Call Identity Service to Grant REVIEWER Role ---
+            try
+            {
+                var identityUrl = _configuration["Services:IdentityServiceUrl"] ?? _configuration["ServiceUrls:Identity"] ?? "http://localhost:5001";
+                var internalApiKey = _configuration["InternalApiKey"] ?? "auth-secret-key-123";
+
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Add("X-Internal-Api-Key", internalApiKey);
+
+                var roleRequest = new { RoleName = "REVIEWER" };
+                var jsonContent = new StringContent(JsonSerializer.Serialize(roleRequest), Encoding.UTF8, "application/json");
+
+                // Note: User Internal API endpoint
+                var roleResponse = await client.PostAsync($"{identityUrl}/api/internal/users/{userId}/roles", jsonContent);
+
+                if (roleResponse.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation($"Successfully granted REVIEWER role to user {userId}");
+                }
+                else
+                {
+                    _logger.LogError($"Failed to grant REVIEWER role to user {userId}. Status: {roleResponse.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error calling Identity Service to grant role: " + ex.Message);
+                // THROW to debug
+                throw new Exception($"Failed to grant role: {ex.Message}"); 
+            }
         }
 
         await _context.SaveChangesAsync();
