@@ -123,7 +123,6 @@ const App: React.FC = () => {
           <Route path="/conferences" element={<ConferenceList onNavigate={handleNavigate} onSelectConference={() => {}} />} />
           <Route path="/conferences/:id" element={<ConferenceDetailsWrapper onNavigate={handleNavigate} />} />
           <Route path="/call-for-papers" element={<CallForPapers onNavigate={handleNavigate} />} />
-          <Route path="/call-for-papers/:id" element={<CallForPapersWrapper onNavigate={handleNavigate} />} />
           <Route path="/program" element={<Program />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/invite/accept" element={<AcceptInvitation />} />
@@ -205,11 +204,6 @@ const App: React.FC = () => {
 const ConferenceDetailsWrapper: React.FC<{ onNavigate: (view: ViewState) => void }> = ({ onNavigate }) => {
   const { id } = useParams<{ id: string }>();
   return <ConferenceDetails conferenceId={id} onNavigate={onNavigate} />;
-};
-
-const CallForPapersWrapper: React.FC<{ onNavigate: (view: ViewState) => void }> = ({ onNavigate }) => {
-  const { id } = useParams<{ id: string }>();
-  return <CallForPapers conferenceId={id} onNavigate={onNavigate} />;
 };
 
 const PaperDetailWrapper: React.FC<{ onNavigate: (view: ViewState) => void }> = ({ onNavigate }) => {

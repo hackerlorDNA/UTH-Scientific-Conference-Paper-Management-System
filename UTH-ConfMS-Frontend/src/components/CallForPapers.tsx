@@ -6,60 +6,87 @@ import conferenceApi, { CallForPapersDto, ConferenceDto } from '../services/conf
 
 interface CallForPapersProps {
     onNavigate: (view: ViewState) => void;
-    conferenceId?: string;
+    conferenceId?: string; // Optional: nếu có thì chỉ hiển thị 1 hội nghị (cho preview)
+}
+
+interface ConferenceCFP {
+    conference: ConferenceDto;
+    cfp: CallForPapersDto;
 }
 
 export const CallForPapers: React.FC<CallForPapersProps> = ({ onNavigate, conferenceId }) => {
-    const [cfp, setCfp] = useState<CallForPapersDto | null>(null);
-    const [conference, setConference] = useState<ConferenceDto | null>(null);
+    const [conferences, setConferences] = useState<ConferenceCFP[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchCfp = async () => {
+        const fetchAllCFPs = async () => {
             setLoading(true);
             setError(null);
             try {
-                let id = conferenceId;
-
-                if (!id) {
-                    const confRes = await conferenceApi.getConferences();
-                    if (confRes.success && confRes.data && confRes.data.items.length > 0) {
-                        // @ts-ignore
-                        const list = confRes.data.items || confRes.data.data || [];
-                        if (list.length > 0) {
-                            id = list[0].conferenceId;
-                        }
-                    }
-                }
-
-                if (id) {
+                // Nếu có conferenceId, chỉ load 1 hội nghị đó (cho preview)
+                if (conferenceId) {
                     const [cfpRes, confRes] = await Promise.all([
-                        conferenceApi.getCallForPapers(id),
-                        conferenceApi.getConference(id)
+                        conferenceApi.getCallForPapers(conferenceId),
+                        conferenceApi.getConference(conferenceId)
                     ]);
 
-                    if (cfpRes.success && cfpRes.data) {
-                        setCfp(cfpRes.data);
+                    if (cfpRes.success && cfpRes.data && confRes.success && confRes.data) {
+                        setConferences([{ conference: confRes.data, cfp: cfpRes.data }]);
                     } else {
-                        setError(cfpRes.message || "Không tìm thấy dữ liệu CFP.");
+                        setError("Không tìm thấy thông tin CFP của hội nghị này.");
+                    }
+                    return;
+                }
+
+                // Nếu không có conferenceId, load tất cả hội nghị đang mở
+                const confRes = await conferenceApi.getConferences();
+                if (confRes.success && confRes.data) {
+                    // @ts-ignore
+                    const list = confRes.data.items || confRes.data.data || [];
+                    
+                    if (list.length === 0) {
+                        setError("Chưa có hội nghị nào được tổ chức.");
+                        return;
                     }
 
-                    if (confRes.success && confRes.data) {
-                        setConference(confRes.data);
+                    // Lấy CFP cho tất cả hội nghị đang mở đợt kêu gọi bài
+                    const cfpPromises = list
+                        .filter((conf: ConferenceDto) => {
+                            const now = new Date();
+                            const deadline = new Date(conf.submissionDeadline);
+                            return deadline > now; // Chỉ lấy hội nghị còn nhận bài
+                        })
+                        .map(async (conf: ConferenceDto) => {
+                            try {
+                                const cfpRes = await conferenceApi.getCallForPapers(conf.conferenceId);
+                                if (cfpRes.success && cfpRes.data) {
+                                    return { conference: conf, cfp: cfpRes.data };
+                                }
+                                return null;
+                            } catch {
+                                return null;
+                            }
+                        });
+
+                    const results = await Promise.all(cfpPromises);
+                    const validCFPs = results.filter((item): item is ConferenceCFP => item !== null);
+                    
+                    if (validCFPs.length === 0) {
+                        setError("Hiện không có hội nghị nào đang mở đợt kêu gọi bài.");
+                    } else {
+                        setConferences(validCFPs);
                     }
-                } else {
-                    setError("Không tìm thấy hội nghị nào đang mở.");
                 }
             } catch (err) {
-                console.error("Failed to fetch CFP", err);
+                console.error("Failed to fetch CFPs", err);
                 setError("Lỗi kết nối đến server. Hãy đảm bảo Backend đang chạy.");
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchCfp();
+        fetchAllCFPs();
     }, [conferenceId]);
 
     if (loading) return (
@@ -69,10 +96,10 @@ export const CallForPapers: React.FC<CallForPapersProps> = ({ onNavigate, confer
         </div>
     );
 
-    if (error || !cfp) return (
+    if (error || conferences.length === 0) return (
         <div className="p-20 text-center flex flex-col items-center gap-4 bg-red-50 rounded-xl m-10 border border-red-100">
             <span className="material-symbols-outlined text-red-500 text-5xl">error</span>
-            <p className="text-red-600 font-bold">{error || "Hội nghị này chưa có thông tin gọi bài báo."}</p>
+            <p className="text-red-600 font-bold">{error || "Hiện không có hội nghị nào đang mở đợt kêu gọi bài."}</p>
             <Link to="/" className="px-6 py-2 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors">
                 Quay lại trang chủ
             </Link>
@@ -88,6 +115,49 @@ export const CallForPapers: React.FC<CallForPapersProps> = ({ onNavigate, confer
         });
     };
 
+    // Nếu chỉ có 1 hội nghị (mode preview), hiển thị dạng chi tiết
+    if (conferences.length === 1 && conferenceId) {
+        const { conference, cfp } = conferences[0];
+        return <CFPDetailView conference={conference} cfp={cfp} formatDate={formatDate} />;
+    }
+
+    // Nếu có nhiều hội nghị, hiển thị dạng grid
+    return (
+        <div className="w-full min-h-screen bg-[#f0f4f8] dark:bg-[#0f172a] font-display">
+            {/* Background Decorative Elements */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-20 dark:opacity-10">
+                <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-primary blur-[120px]"></div>
+                <div className="absolute bottom-[10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-blue-400 blur-[100px]"></div>
+            </div>
+
+            <div className="relative z-10 w-full max-w-[1400px] mx-auto py-12 px-5 lg:px-8">
+                {/* Page Header */}
+                <header className="mb-12 text-center">
+                    <h1 className="text-5xl md:text-6xl font-black text-gray-800 dark:text-white mb-4">
+                        Kêu Gọi Viết Bài
+                    </h1>
+                    <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+                        Khám phá các hội nghị đang mở đợt kêu gọi bài và nộp bài nghiên cứu của bạn
+                    </p>
+                    <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full">
+                        <span className="material-symbols-outlined text-primary">event_available</span>
+                        <span className="text-sm font-bold text-primary">{conferences.length} hội nghị đang nhận bài</span>
+                    </div>
+                </header>
+
+                {/* Conferences Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {conferences.map(({ conference, cfp }) => (
+                        <CFPCard key={conference.conferenceId} conference={conference} cfp={cfp} formatDate={formatDate} />
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// CFP Detail View Component (for single conference preview)
+const CFPDetailView: React.FC<{ conference: ConferenceDto, cfp: CallForPapersDto, formatDate: (date?: string) => string }> = ({ conference, cfp, formatDate }) => {
     return (
         <div className="w-full min-h-screen bg-[#f0f4f8] dark:bg-[#0f172a] font-display">
             {/* Background Decorative Elements */}
@@ -261,9 +331,100 @@ export const CallForPapers: React.FC<CallForPapersProps> = ({ onNavigate, confer
                     </aside>
                 </div>
             </div>
-
-
         </div>
+    );
+};
+
+// CFP Card Component
+const CFPCard: React.FC<{ conference: ConferenceDto, cfp: CallForPapersDto, formatDate: (date?: string) => string }> = ({ conference, cfp, formatDate }) => {
+    const daysUntilDeadline = Math.ceil((new Date(conference.submissionDeadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+    const isUrgent = daysUntilDeadline <= 7;
+
+    return (
+        <article className="group bg-white dark:bg-card-dark rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all border border-white/50 dark:border-white/5">
+            {/* Header */}
+            <div className="relative bg-gradient-to-br from-primary via-[#004494] to-indigo-900 p-8">
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+                <div className="relative">
+                    <div className="flex items-start justify-between mb-4">
+                        <div className="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/30 text-white text-xs font-bold uppercase tracking-wider">
+                            {conference.acronym}
+                        </div>
+                        {isUrgent && (
+                            <div className="flex items-center gap-1 px-3 py-1 bg-red-500/90 rounded-full">
+                                <span className="material-symbols-outlined text-xs text-white">schedule</span>
+                                <span className="text-xs font-bold text-white">Sắp hết hạn</span>
+                            </div>
+                        )}
+                    </div>
+                    <h2 className="text-2xl font-black text-white mb-3 line-clamp-2">
+                        {cfp.title}
+                    </h2>
+                    <p className="text-blue-100/80 text-sm line-clamp-2">
+                        {conference.name}
+                    </p>
+                </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-8">
+                {/* Conference Info */}
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <span className="material-symbols-outlined text-primary text-xl">event</span>
+                        </div>
+                        <div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold">Hạn nộp</p>
+                            <p className="text-sm font-black text-gray-800 dark:text-white">{formatDate(conference.submissionDeadline)}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <span className="material-symbols-outlined text-primary text-xl">location_on</span>
+                        </div>
+                        <div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold">Địa điểm</p>
+                            <p className="text-sm font-black text-gray-800 dark:text-white truncate">{conference.location || "Online"}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Description */}
+                <div className="mb-6">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-3">
+                        {cfp.content || "Chúng tôi trân trọng kính mời quý thầy cô, các nhà khoa học và nghiên cứu sinh gửi bài tham dự hội nghị."}
+                    </p>
+                </div>
+
+                {/* Timeline Tags */}
+                <div className="flex flex-wrap gap-2 mb-6">
+                    <div className="px-3 py-1 bg-gray-100 dark:bg-white/5 rounded-lg text-xs font-semibold text-gray-600 dark:text-gray-400">
+                        <span className="text-primary font-black">{daysUntilDeadline}</span> ngày còn lại
+                    </div>
+                    <div className="px-3 py-1 bg-gray-100 dark:bg-white/5 rounded-lg text-xs font-semibold text-gray-600 dark:text-gray-400">
+                        Diễn ra: {formatDate(conference.startDate)}
+                    </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3">
+                    <Link
+                        to={`/conferences/${conference.conferenceId}`}
+                        className="flex-1 px-4 py-3 bg-gray-100 dark:bg-white/5 text-gray-800 dark:text-white font-bold rounded-xl hover:bg-gray-200 dark:hover:bg-white/10 transition-all text-center"
+                    >
+                        Chi tiết
+                    </Link>
+                    <Link
+                        to="/author/submit"
+                        className="flex-1 px-4 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all text-center flex items-center justify-center gap-2 group"
+                    >
+                        Nộp bài
+                        <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    </Link>
+                </div>
+            </div>
+        </article>
     );
 };
 
