@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ViewState } from '../App';
 import conferenceApi, { CallForPapersDto, ConferenceDto } from '../services/conferenceApi';
 
@@ -72,9 +73,9 @@ export const CallForPapers: React.FC<CallForPapersProps> = ({ onNavigate, confer
         <div className="p-20 text-center flex flex-col items-center gap-4 bg-red-50 rounded-xl m-10 border border-red-100">
             <span className="material-symbols-outlined text-red-500 text-5xl">error</span>
             <p className="text-red-600 font-bold">{error || "Hội nghị này chưa có thông tin gọi bài báo."}</p>
-            <button onClick={() => onNavigate('home')} className="px-6 py-2 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors">
+            <Link to="/" className="px-6 py-2 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors">
                 Quay lại trang chủ
-            </button>
+            </Link>
         </div>
     );
 
@@ -113,15 +114,15 @@ export const CallForPapers: React.FC<CallForPapersProps> = ({ onNavigate, confer
                                 {cfp.content || "Chúng tôi trân trọng kính mời quý thầy cô, các nhà khoa học và nghiên cứu sinh gửi bài tham dự hội nghị."}
                             </p>
                             <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-                                <button
-                                    onClick={() => onNavigate('login')}
+                                <Link
+                                    to="/author/submit"
                                     className="group relative px-8 py-4 bg-white text-primary font-black rounded-2xl hover:scale-105 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.2)]"
                                 >
                                     <span className="flex items-center gap-2">
                                         NỘP BÀI NGAY
                                         <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
                                     </span>
-                                </button>
+                                </Link>
                                 <button
                                     onClick={() => document.getElementById('guidelines')?.scrollIntoView({ behavior: 'smooth' })}
                                     className="px-8 py-4 bg-white/10 backdrop-blur-md text-white font-bold border-2 border-white/20 rounded-2xl hover:bg-white/20 transition-all"

@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { ViewState } from '../App';
 
 interface FooterProps {
@@ -19,9 +20,10 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           </div>
           <div className="flex flex-col gap-2">
             <h4 className="font-bold text-text-main-light dark:text-text-main-dark mb-2">Liên kết nhanh</h4>
-            <button onClick={() => onNavigate('home')} className="text-left text-text-sec-light hover:text-primary transition-colors">Trang chủ</button>
-            <button onClick={() => onNavigate('conference-details')} className="text-left text-text-sec-light hover:text-primary transition-colors">Về hội nghị</button>
-            <button onClick={() => onNavigate('call-for-papers')} className="text-left text-text-sec-light hover:text-primary transition-colors">Kêu gọi bài báo</button>
+            <Link to="/" className="text-left text-text-sec-light hover:text-primary transition-colors">Trang chủ</Link>
+            <Link to="/conferences" className="text-left text-text-sec-light hover:text-primary transition-colors">Hội nghị</Link>
+            <Link to="/call-for-papers" className="text-left text-text-sec-light hover:text-primary transition-colors">Kêu gọi bài báo</Link>
+            <Link to="/about" className="text-left text-text-sec-light hover:text-primary transition-colors">Về chúng tôi</Link>
           </div>
           <div className="flex flex-col gap-2">
             <h4 className="font-bold text-text-main-light dark:text-text-main-dark mb-2">Hỗ trợ</h4>

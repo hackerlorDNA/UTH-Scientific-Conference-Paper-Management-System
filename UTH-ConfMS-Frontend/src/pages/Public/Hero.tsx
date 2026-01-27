@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 interface HeroProps {
   onSubmitPaper?: () => void;       // Hàm gọi khi nhấn nút Nộp bài
@@ -22,20 +23,20 @@ export const Hero: React.FC<HeroProps> = ({ onSubmitPaper, onViewCallForPapers }
           </h2>
 
           <div className="flex flex-wrap justify-center gap-4">
-            <button
-              onClick={onSubmitPaper}
+            <Link
+              to="/conferences"
               className="flex min-w-[160px] cursor-pointer items-center justify-center gap-2 rounded-full h-12 px-8 bg-primary hover:bg-primary-hover text-white text-base font-bold leading-normal tracking-[0.015em] transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
             >
               <span className="material-symbols-outlined text-[20px]">search</span>
               <span className="truncate">Khám phá Hội nghị</span>
-            </button>
-            <button
-              onClick={onViewCallForPapers}
+            </Link>
+            <Link
+              to="/about"
               className="flex min-w-[160px] cursor-pointer items-center justify-center gap-2 rounded-full h-12 px-8 bg-white dark:bg-card-dark text-text-main-light dark:text-text-main-dark border border-border-light dark:border-border-dark hover:bg-gray-50 dark:hover:bg-gray-700 text-base font-bold leading-normal tracking-[0.015em] transition-all shadow-sm hover:shadow-md"
             >
               <span className="material-symbols-outlined text-[20px]">info</span>
               <span className="truncate">Về chúng tôi</span>
-            </button>
+            </Link>
           </div>
         </div>
       </div>

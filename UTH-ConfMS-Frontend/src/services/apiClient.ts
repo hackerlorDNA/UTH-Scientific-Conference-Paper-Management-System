@@ -37,7 +37,8 @@ apiClient.interceptors.response.use(
       // Token expired or invalid
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/';
+      // Using window.location for auth redirect (works without router context)
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }

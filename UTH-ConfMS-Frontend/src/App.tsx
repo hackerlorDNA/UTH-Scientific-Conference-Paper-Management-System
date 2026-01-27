@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Home } from './pages/Public/Home';
 import { Login } from './pages/Auth/Login';
@@ -28,6 +29,7 @@ import { AcceptInvitation } from './pages/Public/AcceptInvitation';
 import { ConferenceList } from './pages/Public/ConferenceList';
 import { AboutUs } from './pages/Public/AboutUs';
 import { useAuth, UserRole } from './contexts/AuthContext';
+
 export type ViewState =
   | 'home'
   | 'login'
@@ -59,133 +61,180 @@ export type ViewState =
   | 'about-us';
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<ViewState>('home');
-  const [selectedPaperId, setSelectedPaperId] = useState<string | null>(null);
-  const [selectedConferenceId, setSelectedConferenceId] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const navigate = useNavigate();
   const { user, isAuthenticated, isLoading } = useAuth();
 
-  // Xử lý Deep Link từ Email (ví dụ: /invite/accept?token=...)
-  useEffect(() => {
-    const path = window.location.pathname;
-    if (path === '/invite/accept') {
-      setCurrentView('accept-invitation');
-    }
-  }, []);
+  // Helper function to navigate using ViewState (backwards compatibility)
+  const handleNavigate = (view: ViewState) => {
+    const routeMap: Record<ViewState, string> = {
+      'home': '/',
+      'login': '/login',
+      'register': '/register',
+      'forgot-password': '/forgot-password',
+      'conference-details': '/conferences',
+      'call-for-papers': '/call-for-papers',
+      'program': '/program',
+      'author-dashboard': '/author/dashboard',
+      'submit-paper': '/author/submit',
+      'paper-detail': '/author/papers',
+      'reviewer-dashboard': '/reviewer/dashboard',
+      'chair-dashboard': '/chair/dashboard',
+      'create-conference': '/chair/create-conference',
+      'cfp-management': '/chair/cfp',
+      'pc-management': '/chair/pc',
+      'pc-members': '/chair/pc-members',
+      'submission-management': '/chair/submissions',
+      'admin-dashboard': '/admin/dashboard',
+      'admin-users': '/admin/users',
+      'admin-config': '/admin/config',
+      'admin-backup': '/admin/backup',
+      'decision': '/decision',
+      'profile': '/profile',
+      'accept-invitation': '/invite/accept',
+      'conference-list': '/conferences',
+      'about-us': '/about'
+    };
+    navigate(routeMap[view] || '/');
+  };
 
   // Hàm bảo vệ View: Chỉ render nếu đúng Role
   const renderProtected = (allowedRoles: UserRole[], component: React.ReactNode) => {
     if (isLoading) return <div className="flex h-screen items-center justify-center">Đang tải...</div>;
-    if (!isAuthenticated) return <Login onNavigate={setCurrentView} />;
+    if (!isAuthenticated) {
+      navigate('/login');
+      return null;
+    }
     if (user && !allowedRoles.includes(user.role)) {
       return <div className="p-10 text-center text-red-600 font-bold">Bạn không có quyền truy cập trang này!</div>;
     }
     return component;
   };
 
-  const renderContent = () => {
-    switch (currentView) {
-      case 'home': return <Home onNavigate={setCurrentView} />;
-      case 'login': return <Login onNavigate={setCurrentView} />;
-      case 'register': return <Register onNavigate={setCurrentView} />;
-      case 'forgot-password': return <ForgotPassword onNavigate={setCurrentView} />;
-      case 'conference-details': return <ConferenceDetails conferenceId={selectedConferenceId || undefined} onNavigate={setCurrentView} />;
-      case 'call-for-papers': return <CallForPapers onNavigate={setCurrentView} conferenceId={selectedConferenceId || undefined} />;
-      case 'program': return <Program />;
-      case 'author-dashboard': return renderProtected(['author', 'admin', 'chair', 'reviewer'],
-        <AuthorDashboard
-          onNavigate={(view) => {
-            // Reset edit mode when navigating from dashboard (e.g. to create new paper)
-            if (view === 'submit-paper') {
-              setIsEditing(false);
-              setSelectedPaperId(null);
-            }
-            setCurrentView(view);
-          }}
-          onViewPaper={(id) => {
-            setSelectedPaperId(id);
-            setCurrentView('paper-detail');
-          }}
-          onEditPaper={(id) => {
-            setSelectedPaperId(id);
-            setIsEditing(true);
-            setCurrentView('submit-paper');
-          }}
-        />
-      );
-      case 'paper-detail': return renderProtected(['author', 'admin', 'chair', 'reviewer'], <PaperDetail paperId={selectedPaperId} onNavigate={setCurrentView} />);
-      case 'submit-paper': return renderProtected(['author', 'admin', 'chair', 'reviewer'],
-        <SubmitPaper
-          onNavigate={setCurrentView}
-          editMode={isEditing}
-          submissionId={selectedPaperId || undefined}
-        />
-      );
-      case 'reviewer-dashboard': return renderProtected(['reviewer', 'admin', 'chair'], <ReviewerDashboard />);
-      case 'chair-dashboard': return renderProtected(['chair', 'admin'],
-        <ChairDashboard
-          onNavigate={setCurrentView}
-          onSelectConference={setSelectedConferenceId}
-          onManageConference={(id) => {
-            setSelectedConferenceId(id);
-            setCurrentView('cfp-management');
-          }}
-          onManagePC={(id) => {
-            setSelectedConferenceId(id);
-            setCurrentView('pc-management');
-          }}
-          onManageSubmissions={(id) => {
-            setSelectedConferenceId(id);
-            setCurrentView('submission-management');
-          }}
-        />
-      );
-      case 'create-conference': return renderProtected(['chair', 'admin'], <CreateConference onNavigate={setCurrentView} />);
-      case 'admin-dashboard': return renderProtected(['admin'], <AdminDashboard onNavigate={setCurrentView} />);
-      case 'admin-users': return renderProtected(['admin'], <UserManagement onNavigate={setCurrentView} />);
-      case 'admin-config': return renderProtected(['admin'], <SystemConfig onNavigate={setCurrentView} />);
-      case 'admin-backup': return renderProtected(['admin'], <DataBackup onNavigate={setCurrentView} />);
-      case 'decision': return <DecisionNotification />;
-      case 'profile': return isAuthenticated ? <Profile /> : <Login onNavigate={setCurrentView} />;
-      case 'pc-members': return renderProtected(['chair', 'admin'], <PCMemberManagement />);
-      case 'cfp-management': return renderProtected(['chair', 'admin'],
-        <CFPManagement
-          onNavigate={setCurrentView}
-          conferenceId={selectedConferenceId || undefined}
-        />
-      );
-      case 'pc-management': return renderProtected(['chair', 'admin'],
-        <PCManagement
-          onNavigate={setCurrentView}
-          conferenceId={selectedConferenceId || undefined}
-        />
-      );
-      case 'submission-management': return renderProtected(['chair', 'admin'],
-        <SubmissionManagement
-          onNavigate={setCurrentView}
-          conferenceId={selectedConferenceId || undefined}
-        />
-      );
-      case 'accept-invitation': return <AcceptInvitation />;
-      case 'conference-list': return <ConferenceList onNavigate={setCurrentView} onSelectConference={setSelectedConferenceId} />;
-      case 'about-us': return <AboutUs />;
-      default: return <Home onNavigate={setCurrentView} />;
-    }
-  };
-
   return (
     <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark transition-colors duration-200">
-      <Navbar onNavigate={(view) => {
-        setIsEditing(false); // Reset edit mode when navigating via Navbar
-        setSelectedPaperId(null);
-        setCurrentView(view);
-      }} currentView={currentView} />
+      <Navbar onNavigate={handleNavigate} currentView="home" />
       <main className="flex flex-col grow">
-        {renderContent()}
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home onNavigate={handleNavigate} />} />
+          <Route path="/login" element={<Login onNavigate={handleNavigate} />} />
+          <Route path="/register" element={<Register onNavigate={handleNavigate} />} />
+          <Route path="/forgot-password" element={<ForgotPassword onNavigate={handleNavigate} />} />
+          <Route path="/conferences" element={<ConferenceList onNavigate={handleNavigate} onSelectConference={() => {}} />} />
+          <Route path="/conferences/:id" element={<ConferenceDetailsWrapper onNavigate={handleNavigate} />} />
+          <Route path="/call-for-papers" element={<CallForPapers onNavigate={handleNavigate} />} />
+          <Route path="/call-for-papers/:id" element={<CallForPapersWrapper onNavigate={handleNavigate} />} />
+          <Route path="/program" element={<Program />} />
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/invite/accept" element={<AcceptInvitation />} />
+          <Route path="/decision" element={<DecisionNotification />} />
+
+          {/* Author Routes */}
+          <Route path="/author/dashboard" element={renderProtected(['author', 'admin', 'chair', 'reviewer'],
+            <AuthorDashboard
+              onNavigate={handleNavigate}
+              onViewPaper={(id) => navigate(`/author/papers/${id}`)}
+              onEditPaper={(id) => navigate(`/author/submit/${id}`)}
+            />
+          )} />
+          <Route path="/author/submit" element={renderProtected(['author', 'admin', 'chair', 'reviewer'],
+            <SubmitPaper onNavigate={handleNavigate} editMode={false} />
+          )} />
+          <Route path="/author/submit/:id" element={renderProtected(['author', 'admin', 'chair', 'reviewer'],
+            <SubmitPaperWrapper onNavigate={handleNavigate} />
+          )} />
+          <Route path="/author/papers/:id" element={renderProtected(['author', 'admin', 'chair', 'reviewer'],
+            <PaperDetailWrapper onNavigate={handleNavigate} />
+          )} />
+
+          {/* Reviewer Routes */}
+          <Route path="/reviewer/dashboard" element={renderProtected(['reviewer', 'admin', 'chair'],
+            <ReviewerDashboard />
+          )} />
+
+          {/* Chair Routes */}
+          <Route path="/chair/dashboard" element={renderProtected(['chair', 'admin'],
+            <ChairDashboard
+              onNavigate={handleNavigate}
+              onSelectConference={() => {}}
+              onManageConference={(id) => navigate(`/chair/cfp/${id}`)}
+              onManagePC={(id) => navigate(`/chair/pc/${id}`)}
+              onManageSubmissions={(id) => navigate(`/chair/submissions/${id}`)}
+            />
+          )} />
+          <Route path="/chair/create-conference" element={renderProtected(['chair', 'admin'],
+            <CreateConference onNavigate={handleNavigate} />
+          )} />
+          <Route path="/chair/cfp/:id" element={renderProtected(['chair', 'admin'],
+            <CFPManagementWrapper onNavigate={handleNavigate} />
+          )} />
+          <Route path="/chair/pc/:id" element={renderProtected(['chair', 'admin'],
+            <PCManagementWrapper onNavigate={handleNavigate} />
+          )} />
+          <Route path="/chair/submissions/:id" element={renderProtected(['chair', 'admin'],
+            <SubmissionManagementWrapper onNavigate={handleNavigate} />
+          )} />
+          <Route path="/chair/pc-members" element={renderProtected(['chair', 'admin'],
+            <PCMemberManagement />
+          )} />
+
+          {/* Admin Routes */}
+          <Route path="/admin/dashboard" element={renderProtected(['admin'],
+            <AdminDashboard onNavigate={handleNavigate} />
+          )} />
+          <Route path="/admin/users" element={renderProtected(['admin'],
+            <UserManagement onNavigate={handleNavigate} />
+          )} />
+          <Route path="/admin/config" element={renderProtected(['admin'],
+            <SystemConfig onNavigate={handleNavigate} />
+          )} />
+          <Route path="/admin/backup" element={renderProtected(['admin'],
+            <DataBackup onNavigate={handleNavigate} />
+          )} />
+
+          {/* Profile */}
+          <Route path="/profile" element={isAuthenticated ? <Profile /> : <Login onNavigate={handleNavigate} />} />
+        </Routes>
       </main>
-      <Footer onNavigate={setCurrentView} />
+      <Footer onNavigate={handleNavigate} />
     </div>
   );
+};
+
+// Wrapper components to extract params
+const ConferenceDetailsWrapper: React.FC<{ onNavigate: (view: ViewState) => void }> = ({ onNavigate }) => {
+  const { id } = useParams<{ id: string }>();
+  return <ConferenceDetails conferenceId={id} onNavigate={onNavigate} />;
+};
+
+const CallForPapersWrapper: React.FC<{ onNavigate: (view: ViewState) => void }> = ({ onNavigate }) => {
+  const { id } = useParams<{ id: string }>();
+  return <CallForPapers conferenceId={id} onNavigate={onNavigate} />;
+};
+
+const PaperDetailWrapper: React.FC<{ onNavigate: (view: ViewState) => void }> = ({ onNavigate }) => {
+  const { id } = useParams<{ id: string }>();
+  return <PaperDetail paperId={id || null} onNavigate={onNavigate} />;
+};
+
+const SubmitPaperWrapper: React.FC<{ onNavigate: (view: ViewState) => void }> = ({ onNavigate }) => {
+  const { id } = useParams<{ id: string }>();
+  return <SubmitPaper onNavigate={onNavigate} editMode={true} submissionId={id} />;
+};
+
+const CFPManagementWrapper: React.FC<{ onNavigate: (view: ViewState) => void }> = ({ onNavigate }) => {
+  const { id } = useParams<{ id: string }>();
+  return <CFPManagement onNavigate={onNavigate} conferenceId={id} />;
+};
+
+const PCManagementWrapper: React.FC<{ onNavigate: (view: ViewState) => void }> = ({ onNavigate }) => {
+  const { id } = useParams<{ id: string }>();
+  return <PCManagement onNavigate={onNavigate} conferenceId={id} />;
+};
+
+const SubmissionManagementWrapper: React.FC<{ onNavigate: (view: ViewState) => void }> = ({ onNavigate }) => {
+  const { id } = useParams<{ id: string }>();
+  return <SubmissionManagement onNavigate={onNavigate} conferenceId={id} />;
 };
 
 export default App;

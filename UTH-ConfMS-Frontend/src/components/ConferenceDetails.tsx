@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import conferenceApi, { ConferenceDetailDto } from '../services/conferenceApi';
 import { ViewState } from '../App';
 
@@ -51,12 +52,12 @@ export const ConferenceDetails: React.FC<ConferenceDetailsProps> = ({ conference
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
         <p className="text-red-500 font-medium text-lg">{error || 'Không tìm thấy hội nghị.'}</p>
-        <button
-          onClick={() => onNavigate?.('conference-list')}
+        <Link
+          to="/conferences"
           className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
         >
           Quay lại danh sách
-        </button>
+        </Link>
       </div>
     );
   }
@@ -140,13 +141,13 @@ export const ConferenceDetails: React.FC<ConferenceDetailsProps> = ({ conference
 
             {conference.status === 'Open' && (
               <div className="mt-6 pt-4 border-t border-border-light dark:border-border-dark">
-                <button
-                  onClick={() => onNavigate?.('call-for-papers')}
+                <Link
+                  to="/author/submit"
                   className="w-full py-3 rounded-lg font-bold text-white transition-all flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover shadow-md hover:shadow-lg"
                 >
                   <span className="material-symbols-outlined">upload_file</span>
                   Nộp bài ngay
-                </button>
+                </Link>
               </div>
             )}
           </div>

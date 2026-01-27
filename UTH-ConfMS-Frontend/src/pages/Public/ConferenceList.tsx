@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ViewState } from '../../App';
 import conferenceApi, { ConferenceDto } from '../../services/conferenceApi';
 
@@ -81,15 +82,12 @@ export const ConferenceList: React.FC<ConferenceListProps> = ({ onNavigate, onSe
                                     <p className="text-sm text-text-sec-light dark:text-text-sec-dark line-clamp-3 mb-6 flex-1">
                                         {conf.description || 'Chưa có mô tả.'}
                                     </p>
-                                    <button
-                                        onClick={() => {
-                                            if (onSelectConference) onSelectConference(conf.conferenceId);
-                                            onNavigate('conference-details');
-                                        }}
-                                        className="w-full mt-auto cursor-pointer rounded-lg h-10 bg-primary/10 hover:bg-primary/20 text-primary text-sm font-bold transition-colors"
+                                    <Link
+                                        to={`/conferences/${conf.conferenceId}`}
+                                        className="w-full mt-auto cursor-pointer rounded-lg h-10 bg-primary/10 hover:bg-primary/20 text-primary text-sm font-bold transition-colors flex items-center justify-center"
                                     >
                                         Xem chi tiết
-                                    </button>
+                                    </Link>
                                 </div>
                             </div>
                         ))}

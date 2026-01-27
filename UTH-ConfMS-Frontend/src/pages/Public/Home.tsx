@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ViewState } from '../../App';
 import { Hero } from './Hero';
 import conferenceApi, { ConferenceDto } from '../../services/conferenceApi';
@@ -41,12 +42,12 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
             <h2 className="text-2xl md:text-3xl font-bold text-primary tracking-tight">
               Các hội nghị đang diễn ra
             </h2>
-            <button
-              onClick={() => onNavigate?.('conference-list')}
+            <Link
+              to="/conferences"
               className="text-primary font-bold text-sm hover:underline flex items-center gap-1"
             >
               Xem tất cả <span className="material-symbols-outlined text-sm">arrow_forward</span>
-            </button>
+            </Link>
           </div>
 
           {loading ? (
@@ -84,12 +85,12 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                     </div>
 
                     <div className="mt-auto pt-4 border-t border-dashed border-border-light dark:border-border-dark">
-                      <button
-                        onClick={() => onNavigate?.('conference-list')}
-                        className="w-full py-2 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-primary hover:text-white text-text-main-light dark:text-text-main-dark font-medium text-sm transition-all duration-200"
+                      <Link
+                        to={`/conferences/${conf.conferenceId}`}
+                        className="block w-full py-2 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-primary hover:text-white text-text-main-light dark:text-text-main-dark font-medium text-sm transition-all duration-200 text-center"
                       >
                         Xem chi tiết
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -131,12 +132,12 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                 <span className="font-medium">Thống kê chi tiết</span>
               </div>
             </div>
-            <button
-              onClick={() => onNavigate?.('about-us')}
-              className="mt-4 px-6 py-3 bg-white border border-border-light text-primary font-bold rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+            <Link
+              to="/about"
+              className="mt-4 px-6 py-3 bg-white border border-border-light text-primary font-bold rounded-lg hover:bg-gray-50 transition-colors shadow-sm inline-block"
             >
               Tìm hiểu thêm về chúng tôi
-            </button>
+            </Link>
           </div>
           <div className="flex-1 w-full max-w-[500px]">
             <div className="relative aspect-square rounded-2xl overflow-hidden shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500">
