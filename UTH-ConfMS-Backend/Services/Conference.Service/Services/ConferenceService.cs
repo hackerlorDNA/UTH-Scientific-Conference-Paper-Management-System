@@ -259,6 +259,18 @@ public class ConferenceService : IConferenceService
         return _mapper.Map<TrackDto>(track);
     }
 
+    public async Task DeleteTrackAsync(Guid trackId)
+    {
+        var track = await _unitOfWork.Tracks.GetByIdAsync(trackId);
+        if (track == null)
+        {
+            throw new InvalidOperationException("Track not found");
+        }
+
+        await _unitOfWork.Tracks.DeleteAsync(track);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
     public async Task<List<DeadlineDto>> GetDeadlinesAsync(Guid conferenceId)
     {
         var deadlines = await _unitOfWork.Deadlines.GetByConferenceIdAsync(conferenceId);

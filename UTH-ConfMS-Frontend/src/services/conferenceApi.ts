@@ -28,7 +28,7 @@ export interface ConferenceDetailDto extends ConferenceDto {
 }
 
 export interface TrackDto {
-    id: number;
+    trackId: string;
     name: string;
     description?: string;
 }
@@ -131,6 +131,16 @@ export const conferenceApi = {
     // Tracks
     getTracks: async (conferenceId: string): Promise<ApiResponse<TrackDto[]>> => {
         const response = await apiClient.get<ApiResponse<TrackDto[]>>(`/api/conferences/${conferenceId}/tracks`);
+        return response.data;
+    },
+
+    createTrack: async (conferenceId: string, name: string): Promise<ApiResponse<TrackDto>> => {
+        const response = await apiClient.post<ApiResponse<TrackDto>>(`/api/conferences/${conferenceId}/tracks`, { name });
+        return response.data;
+    },
+
+    deleteTrack: async (conferenceId: string, trackId: string): Promise<ApiResponse<void>> => {
+        const response = await apiClient.delete<ApiResponse<void>>(`/api/conferences/${conferenceId}/tracks/${trackId}`);
         return response.data;
     },
 

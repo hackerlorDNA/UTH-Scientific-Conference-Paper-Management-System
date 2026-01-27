@@ -74,4 +74,31 @@ public class TracksController : ControllerBase
             });
         }
     }
+
+    /// <summary>
+    /// Delete a track from conference
+    /// </summary>
+    [HttpDelete("{trackId:guid}")]
+    [Authorize(Policy = "RequireConferenceManage")]
+    public async Task<IActionResult> DeleteTrack(Guid conferenceId, Guid trackId)
+    {
+        try
+        {
+            await _conferenceService.DeleteTrackAsync(trackId);
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = "Track deleted successfully"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Delete track failed for trackId {TrackId}", trackId);
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = ex.Message
+            });
+        }
+    }
 }

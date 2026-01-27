@@ -4,7 +4,7 @@ import { AIBadge } from "../../components/AIBadge";
 import { AISpellCheck } from "../../components/AISpellCheck";
 import { useAuth } from "../../contexts/AuthContext";
 import { paperApi, AuthorSubmission } from "../../services/paper";
-import conferenceApi, { ConferenceDto } from "../../services/conferenceApi";
+import conferenceApi, { ConferenceDto, TrackDto } from "../../services/conferenceApi";
 
 interface SubmitProps {
   onNavigate: (view: ViewState) => void;
@@ -28,8 +28,10 @@ export const SubmitPaper: React.FC<SubmitProps> = ({ onNavigate, editMode = fals
   const [file, setFile] = useState<File | null>(null);
   const [agree, setAgree] = useState(false);
 
-  // Danh sách hội nghị
+  // Danh sách hội nghị và tracks
   const [conferences, setConferences] = useState<ConferenceDto[]>([]);
+  const [tracks, setTracks] = useState<TrackDto[]>([]);
+  const [isLoadingTracks, setIsLoadingTracks] = useState(false);
 
   // Load submission data khi ở edit mode
   useEffect(() => {
@@ -100,6 +102,33 @@ export const SubmitPaper: React.FC<SubmitProps> = ({ onNavigate, editMode = fals
     };
     fetchConferences();
   }, []);
+
+  // Load tracks khi chọn conference
+  useEffect(() => {
+    const fetchTracks = async () => {
+      if (!conferenceId) {
+        setTracks([]);
+        return;
+      }
+      
+      setIsLoadingTracks(true);
+      try {
+        const response = await conferenceApi.getTracks(conferenceId);
+        if (response.success && response.data) {
+          setTracks(response.data);
+        } else {
+          setTracks([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch tracks:", error);
+        setTracks([]);
+      } finally {
+        setIsLoadingTracks(false);
+      }
+    };
+    
+    fetchTracks();
+  }, [conferenceId]);
 
   const handleAddAuthor = () => {
     setAuthors([
@@ -392,13 +421,23 @@ export const SubmitPaper: React.FC<SubmitProps> = ({ onNavigate, editMode = fals
                 <select
                   value={topicId || ""}
                   onChange={(e) => setTopicId(e.target.value)}
-                  className="w-full h-10 px-3 rounded border border-border-light focus:ring-2 focus:ring-primary outline-none bg-white"
+                  disabled={!conferenceId || isLoadingTracks}
+                  className={`w-full h-10 px-3 rounded border border-border-light focus:ring-2 focus:ring-primary outline-none ${!conferenceId || isLoadingTracks ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
                 >
-                  <option value="">Chọn chủ đề phù hợp...</option>
-                  <option value="e1b1b1b1-b1b1-b1b1-b1b1-b1b1b1b1b1b1">Hệ thống điều khiển thông minh</option>
-                  <option value="e2b2b2b2-b2b2-b2b2-b2b2-b2b2b2b2b2b2">Trí tuệ nhân tạo và Ứng dụng</option>
-                  <option value="e3b3b3b3-b3b3-b3b3-b3b3-b3b3b3b3b3b3">Hệ thống năng lượng tái tạo</option>
+                  <option value="">
+                    {!conferenceId ? 'Vui lòng chọn hội nghị trước' : isLoadingTracks ? 'Đang tải tracks...' : 'Chọn chủ đề phù hợp...'}
+                  </option>
+                  {tracks.map((track) => (
+                    <option key={track.trackId} value={track.trackId}>
+                      {track.name}
+                    </option>
+                  ))}
                 </select>
+                {conferenceId && tracks.length === 0 && !isLoadingTracks && (
+                  <p className="text-xs text-orange-600">
+                    Hội nghị này chưa có track nào. Vui lòng liên hệ Chair để thêm track.
+                  </p>
+                )}
               </div>
             </div>
           )}

@@ -49,8 +49,8 @@ export const adminApi = {
     return response.data;
   },
 
-  createTrack: async (conferenceId: number, name: string) => {
-    const response = await apiClient.post(`/api/tracks`, { conferenceId, name });
+  createTrack: async (conferenceId: string, name: string) => {
+    const response = await apiClient.post(`/api/conferences/${conferenceId}/tracks`, { name });
     return response.data;
   },
 

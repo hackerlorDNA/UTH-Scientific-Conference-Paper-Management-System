@@ -15,6 +15,7 @@ public interface IConferenceService
     Task<CallForPapersDto> UpdateCallForPapersAsync(Guid conferenceId, UpdateCallForPapersRequest request, Guid userId);
     Task<List<TrackDto>> GetTracksAsync(Guid conferenceId);
     Task<TrackDto> AddTrackAsync(Guid conferenceId, CreateTrackRequest request);
+    Task DeleteTrackAsync(Guid trackId);
 
     // Committee Members
     Task<List<CommitteeMemberDto>> GetCommitteeMembersAsync(Guid conferenceId);
