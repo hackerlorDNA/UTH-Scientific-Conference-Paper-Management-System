@@ -25,6 +25,8 @@ import { CFPManagement } from './pages/Chair/CFPManagement';
 import { PCManagement } from './pages/Chair/PCManagement';
 import { SubmissionManagement } from './pages/Chair/SubmissionManagement';
 import { AcceptInvitation } from './pages/Public/AcceptInvitation';
+import { ConferenceList } from './pages/Public/ConferenceList';
+import { AboutUs } from './pages/Public/AboutUs';
 import { useAuth, UserRole } from './contexts/AuthContext';
 export type ViewState =
   | 'home'
@@ -50,7 +52,11 @@ export type ViewState =
   | 'pc-management'
   | 'submission-management'
   | 'accept-invitation'
-  | 'paper-detail';
+  | 'submission-management'
+  | 'accept-invitation'
+  | 'paper-detail'
+  | 'conference-list'
+  | 'about-us';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>('home');
@@ -83,7 +89,7 @@ const App: React.FC = () => {
       case 'login': return <Login onNavigate={setCurrentView} />;
       case 'register': return <Register onNavigate={setCurrentView} />;
       case 'forgot-password': return <ForgotPassword onNavigate={setCurrentView} />;
-      case 'conference-details': return <ConferenceDetails />;
+      case 'conference-details': return <ConferenceDetails conferenceId={selectedConferenceId || undefined} onNavigate={setCurrentView} />;
       case 'call-for-papers': return <CallForPapers onNavigate={setCurrentView} conferenceId={selectedConferenceId || undefined} />;
       case 'program': return <Program />;
       case 'author-dashboard': return renderProtected(['author', 'admin', 'chair', 'reviewer'],
@@ -108,9 +114,9 @@ const App: React.FC = () => {
         />
       );
       case 'paper-detail': return renderProtected(['author', 'admin', 'chair', 'reviewer'], <PaperDetail paperId={selectedPaperId} onNavigate={setCurrentView} />);
-      case 'submit-paper': return renderProtected(['author', 'admin', 'chair', 'reviewer'], 
-        <SubmitPaper 
-          onNavigate={setCurrentView} 
+      case 'submit-paper': return renderProtected(['author', 'admin', 'chair', 'reviewer'],
+        <SubmitPaper
+          onNavigate={setCurrentView}
           editMode={isEditing}
           submissionId={selectedPaperId || undefined}
         />
@@ -161,6 +167,8 @@ const App: React.FC = () => {
         />
       );
       case 'accept-invitation': return <AcceptInvitation />;
+      case 'conference-list': return <ConferenceList onNavigate={setCurrentView} onSelectConference={setSelectedConferenceId} />;
+      case 'about-us': return <AboutUs />;
       default: return <Home onNavigate={setCurrentView} />;
     }
   };

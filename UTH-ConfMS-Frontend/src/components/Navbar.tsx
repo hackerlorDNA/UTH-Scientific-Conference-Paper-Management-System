@@ -48,9 +48,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentView }) => {
               <div className="flex items-center gap-4 lg:gap-8">
                 <div className="hidden lg:flex items-center gap-6">
                   <button onClick={() => onNavigate('home')} className={navClass('home')}>Trang chủ</button>
-                  <button onClick={() => onNavigate('conference-details')} className={navClass('conference-details')}>Thông tin hội nghị</button>
-                  <button onClick={() => onNavigate('call-for-papers')} className={navClass('call-for-papers')}>Kêu gọi bài báo</button>
-                  <button onClick={() => onNavigate('program')} className={navClass('program')}>Chương trình</button>
+                  <button onClick={() => onNavigate('conference-list')} className={navClass('conference-list')}>Hội nghị</button>
+                  <button onClick={() => onNavigate('call-for-papers')} className={navClass('call-for-papers')}>Kêu gọi báo cáo</button>
+                  <button onClick={() => onNavigate('about-us')} className={navClass('about-us')}>Về chúng tôi</button>
                 </div>
 
                 {user ? (

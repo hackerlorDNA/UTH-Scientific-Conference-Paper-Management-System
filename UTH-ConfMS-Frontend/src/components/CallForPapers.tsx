@@ -190,6 +190,25 @@ export const CallForPapers: React.FC<CallForPapersProps> = ({ onNavigate, confer
 
                     {/* Sidebar: Timeline & Info */}
                     <aside className="space-y-8">
+                        {/* Overview Section */}
+                        <section className="bg-white dark:bg-card-dark rounded-3xl p-8 shadow-xl border border-white/50 dark:border-white/5">
+                            <h3 className="text-xl font-black text-gray-800 dark:text-white mb-6 flex items-center gap-3">
+                                <span className="material-symbols-outlined text-primary">info</span>
+                                Thông tin sơ lược
+                            </h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Tiêu đề</h4>
+                                    <p className="font-bold text-gray-800 dark:text-white text-lg">{cfp.title}</p>
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Giới thiệu</h4>
+                                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed text-justify">
+                                        {cfp.content ? (cfp.content.length > 200 ? cfp.content.substring(0, 200) + '...' : cfp.content) : 'Chưa có nội dung giới thiệu.'}
+                                    </p>
+                                </div>
+                            </div>
+                        </section>
                         {/* Timeline Section */}
                         <section className="bg-white dark:bg-card-dark rounded-3xl p-8 shadow-xl border border-white/50 dark:border-white/5">
                             <h3 className="text-xl font-black text-gray-800 dark:text-white mb-6 flex items-center gap-3">
@@ -242,23 +261,7 @@ export const CallForPapers: React.FC<CallForPapersProps> = ({ onNavigate, confer
                 </div>
             </div>
 
-            {/* Sticky Navigation */}
-            <div className="fixed bottom-8 right-8 z-[100] flex flex-col gap-4 items-end">
-                <button
-                    onClick={() => onNavigate('chair-dashboard')}
-                    className="group flex items-center gap-3 px-8 py-4 bg-white/90 dark:bg-card-dark/90 backdrop-blur-md text-gray-800 dark:text-white rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/50 dark:border-white/10 font-black hover:bg-white dark:hover:bg-gray-800 transition-all hover:scale-105 active:scale-95"
-                >
-                    <span className="material-symbols-outlined text-2xl group-hover:-translate-x-1 transition-transform">arrow_back</span>
-                    QUAY LẠI
-                </button>
-                <button
-                    onClick={() => onNavigate('home')}
-                    className="group flex items-center gap-3 px-8 py-4 bg-primary text-white rounded-2xl shadow-[0_10px_30px_rgba(59,130,246,0.3)] border border-primary/20 font-black hover:scale-110 active:scale-95 transition-all"
-                >
-                    <span className="material-symbols-outlined text-2xl group-hover:rotate-12 transition-transform">home</span>
-                    TRANG CHỦ
-                </button>
-            </div>
+
         </div>
     );
 };
